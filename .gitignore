@@ -1,0 +1,4 @@
+.stack-work/
+*~
+/sappy.cabal
+/stack.yaml
