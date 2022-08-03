@@ -36,12 +36,14 @@ data ProductionRef sym
   = ProdRef sym String
 
 data Priority sym
-  = TransPriority        [ProductionRef sym]   [ProductionRef sym]
-  | NontransPriority     [ProductionRef sym]   [ProductionRef sym]
+  = TransPriority         [ProductionRef sym]     [ProductionRef sym]
+  | NontransPriority      [ProductionRef sym]     [ProductionRef sym]
   | IndexTransPriority    (ProductionRef sym) Int (ProductionRef sym)
-  | IndexNontransPriority (ProductionRef sym) Int (ProductionRef sym)
-  | AttrTransPriority     (Attribute, [ProductionRef sym]) (Attribute, [ProductionRef sym])
+  | IndexNontransPriority (ProductionRef sym) Int (ProductionRef sym)  
   | AttrNontransPriority  (ProductionRef sym) Int (ProductionRef sym)
+  | AttrTransPriority
+    (Attribute, [ProductionRef sym])
+    (Attribute, [ProductionRef sym])
 
 type Lookahead = [CharClass]
 
@@ -59,12 +61,12 @@ data Section
   | CFRestriction   [Restriction Symbol]
 
 data KernSection
-  = KernSyntax        [Production KernelSymbol]
-  | KernStartSymbols [KernelSymbol]
+  = KernSyntax            [Production KernelSymbol]
+  | KernStartSymbols      [KernelSymbol]
   | KernelTemplateOptions [TemplateOption KernelSymbol]
-  | KernCFPriorities [Priority KernelSymbol]
-  | KernLexRestriction [Restriction KernelSymbol]
-  | KernCFRestriction  [Restriction KernelSymbol]  
+  | KernCFPriorities      [Priority KernelSymbol]
+  | KernLexRestriction    [Restriction KernelSymbol]
+  | KernCFRestriction     [Restriction KernelSymbol]  
 
 data Spec = Spec String [String] [Section]
 
