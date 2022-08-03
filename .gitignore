@@ -2,3 +2,4 @@
 *~
 /sappy.cabal
 /stack.yaml
+*.lock
