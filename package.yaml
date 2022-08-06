@@ -1,5 +1,5 @@
 name:                sappy
-version:             0.1.0.0
+version:             0.1
 github:              "heades/sappy"
 license:             BSD3
 author:              "Harley Eades III"
@@ -20,8 +20,10 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/sappy#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- parsec >= 3.1.15 && < 3.1.16
+- base       >= 4.7    && < 5
+- haskeline  >= 0.8    && < 0.9
+- parsec     >= 3.1.15 && < 3.1.16
+- QuickCheck >= 2.14   && < 2.15
 
 library:
   source-dirs: src
@@ -35,15 +37,5 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - sappy
-
-tests:
-  sappy-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
+    - QuickCheck
     - sappy
