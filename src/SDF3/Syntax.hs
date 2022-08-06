@@ -1,27 +1,67 @@
+-- | The SDF3 syntax is divided into two main parts:
+--
+--   1. The surface specification.
+--
+--   2. The kernel specification.
+--
+--   The first is the specification defined by the user while the second is
+--   the normalized version of the surface specification.
 module SDF3.Syntax where
 
 -- * Surface Specification
 
-data Spec = Spec String [Spec] [Section]
+-- | The surface specification consists of a module name, any imported
+--   specifications and a list of sections.
+data Spec
+  = Spec String    -- ^ The module name.
+         [Spec]    -- ^ All imported specifications.
+         [Section] -- ^ The list of sections making up the specificaiton.
 
+-- | Sections make up the entirity of the specification, and
+--   consist of:
 data Section
-  = LexSyntax       [Production Symbol]
-  | CFSyntax        [Production Symbol]
-  | LexStartSymbols [Symbol]
-  | CFStartSymbols  [Symbol]
-  | TemplateOptions [TemplateOption Symbol]
-  | CFPriorities    [Priority Symbol]
-  | LexRestriction  [Restriction Symbol]
-  | CFRestriction   [Restriction Symbol]
+  = LexSyntax       [Production Symbol]     -- ^ The lexical syntax.
+  
+  | CFSyntax        [Production Symbol]     -- ^ The context-free syntax.
+  
+  | LexStartSymbols [Symbol]                -- ^ The lexical start symbols
+                                            --   (non-terminals).
+  | CFStartSymbols  [Symbol]                -- ^ The context-free start symbols
+                                            --   (non-terminals).
+  | TemplateOptions [TemplateOption Symbol] -- ^ The set of template options.
+  
+  | CFPriorities    [Priority Symbol]       -- ^ The set of context-free priorities;
+                                            --   used for disambiguation.
+  | LexRestriction  [Restriction Symbol]    -- ^ Lexical restrictions;
+                                            --   used for disambiguation.
+  | CFRestriction   [Restriction Symbol]    -- ^ Context-free restrictions;
+                                            --   used for disambiguation.
 
+-- | Productions make up the lexical and context-free syntax sections,
+--   and consist of:
 data Production sym
+    -- | An ordinary production of the form
+    --      
+    -- sym.const = w {attributes}
+    --
+    -- where 'w' is a word over 'SDF3.Symbol'.         
   = Prod         sym            String [sym]            [Attribute]
+    -- | A template production of the form
+    --      
+    -- sym.const = [w] {attributes}
+    --
+    -- or
+    --
+    -- sym.const = <w> {attributes}
+    -- 
+    -- where 'w' is a word over 'SDF3.TemplateSymbol'.
   | TemplateProd TemplateSymbol String [TemplateSymbol] [Attribute]
 
+-- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sym
-  = Keyword  [CharClass]
-  | Tokenize [Char]
-  | AttrSym  sym Attribute
+  = Keyword  [CharClass]    -- ^ Used to setup follow restrictions on keywords.
+  | Tokenize [Char]         -- ^ Specifies which characters have layout around them.
+  | AttrSym  sym Attribute  -- ^ Mainly used to setup reject rules for keywords.
 
 data Priority sym
   = TransPriority         [ProductionRef sym]     [ProductionRef sym]
