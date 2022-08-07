@@ -108,12 +108,14 @@ data Symbol
   | Sequence    Symbol Symbol        -- ^ Sequences of symbols (@sym sym@)
   | Alternative Symbol Symbol        -- ^ Alternative symbols (@sym | sym@)
 
-data TemplateSymbol
-  = TLitSort  Sort
-  | TOptSort Sort
-  | TListSort Sort String LMode
-  | TLitSym  String
-  | TSeqence TemplateSymbol TemplateSymbol
+-- | Template symbols are the basic lexical structure of template
+--   productions in the surface specification.  They consist of:
+data TemplateSymbol 
+  = TLitSym  String                         -- ^ Literal symbols (strings)
+  | TLitSort  Sort                          -- ^ Sorts (non-terminals)
+  | TOptSort Sort                           -- ^ Optional sorts (@sym?@)
+  | TListSort Sort String LMode             -- ^ Lists of symbols (@sym*@ or @sym+@)  
+  | TSeqence TemplateSymbol TemplateSymbol  -- ^ Sequences of symbols (@sym sym@)
 
 -- | Sorts define the non-terminals of the specification.
 data Sort = SortLit String  -- ^ A sort defined by the user.
