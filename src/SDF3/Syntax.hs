@@ -122,15 +122,16 @@ data Sort = SortLit String  -- ^ A sort defined by the user.
           | Layout          -- ^ A reserved sort name used to indicate the
                             --   whitespace that can appear between
                             --   context-free symbols.
-
+            
+-- | Character classes describe sets of lexical characters.  They consist of:
 data CharClass
-  = Class        [Char]
-  | Complement   CharClass
-  | Difference   CharClass CharClass
-  | Union        CharClass CharClass
-  | Intersection CharClass CharClass
+  = Class        [Char]                -- ^ A character class; e.g, @[a-z]@, @[A-Z]@, etc.
+  | Complement   CharClass             -- ^ The complement of a character class.
+  | Difference   CharClass CharClass   -- ^ The difference of two character classes.
+  | Union        CharClass CharClass   -- ^ The union of two character classes.
+  | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
 
--- | Language disamiguation attribtues.
+-- | Attributes describe restrictions on productinos. They consist of:
 data Attribute
   = Left            -- ^ Left associative.
   | Right           -- ^ Right associative.
@@ -139,9 +140,12 @@ data Attribute
   | Bracket         -- ^ Bracketing.
   | Reject          -- ^ Keyword reservation.
 
-data LMode = ZeroManyList | OneManyList
-
+-- | A list of character classes that describe the lookahead symbol.
 type Lookahead = [CharClass]
+
+-- | Describe whether a symbol list can be empty or non-empty.
+data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can be empty.
+           | OneManyList   -- ^ List contains one or more elements; e.g., must be non-empty.
 
 -- * Kernel Specification
 
