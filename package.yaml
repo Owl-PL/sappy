@@ -22,7 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base       >= 4.7    && < 5
 - haskeline  >= 0.8    && < 0.9
-- parsec     >= 3.1.15 && < 3.1.16
+- containers >= 0.6    && < 0.7
 - QuickCheck >= 2.14   && < 2.15
 
 library:
@@ -37,5 +37,6 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - containers
     - QuickCheck
     - sappy

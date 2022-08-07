@@ -20,7 +20,9 @@ data Spec
 -- | Sections make up the entirity of the specification, and
 --   consist of:
 data Section
-  = LexSyntax       [Production Symbol]     -- ^ The lexical syntax.
+  = CFSorts         [Sort]                  -- ^ Context-free sorts (non-terminals).
+  | LexSorts        [Sort]                  -- ^ Lexical syntax sorts (non-terminals).
+  | LexSyntax       [Production Symbol]     -- ^ The lexical syntax.
   
   | CFSyntax        [Production Symbol]     -- ^ The context-free syntax.
   
@@ -42,10 +44,10 @@ data Section
 data Production sym
     -- | An ordinary production of the form
     --      
-    -- @sym.const = w {attributes}@
+    -- @sym.const = sym {attributes}@
     --
-    -- where @w@ is a word over 'SDF3.Symbol'.         
-  = Prod sym String [sym] [Attribute]
+    -- where @sym@ is a word over 'SDF3.Symbol'.         
+  = Prod Sort String sym [Attribute]
     -- | A template production of the form
     --      
     -- @sym.const = [w] {attributes}@
@@ -55,7 +57,7 @@ data Production sym
     -- @sym.const = \<w\> {attributes}@
     -- 
     -- where @w@ is a word over 'SDF3.TemplateSymbol'.
-  | TemplateProd TemplateSymbol String [TemplateSymbol] [Attribute]
+  | TemplateProd Sort String TemplateSymbol [Attribute]
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sym
@@ -107,6 +109,7 @@ data Symbol
   | ListSym     Sort   String LMode  -- ^ Lists of symbols (@sym*@ or @sym+@)
   | Sequence    Symbol Symbol        -- ^ Sequences of symbols (@sym sym@)
   | Alternative Symbol Symbol        -- ^ Alternative symbols (@sym | sym@)
+  deriving (Eq,Ord)
 
 -- | Template symbols are the basic lexical structure of template
 --   productions in the surface specification.  They consist of:
@@ -122,6 +125,7 @@ data Sort = SortLit String  -- ^ A sort defined by the user.
           | Layout          -- ^ A reserved sort name used to indicate the
                             --   whitespace that can appear between
                             --   context-free symbols.
+  deriving (Eq,Ord)
             
 -- | Character classes describe sets of lexical characters.  They consist of:
 data CharClass
@@ -130,6 +134,7 @@ data CharClass
   | Difference   CharClass CharClass   -- ^ The difference of two character classes.
   | Union        CharClass CharClass   -- ^ The union of two character classes.
   | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
+  deriving (Eq,Ord)
 
 -- | Attributes describe restrictions on productinos. They consist of:
 data Attribute
@@ -146,6 +151,7 @@ type Lookahead = [CharClass]
 -- | Describe whether a symbol list can be empty or non-empty.
 data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can be empty.
            | OneManyList   -- ^ List contains one or more elements; e.g., must be non-empty.
+  deriving (Eq,Ord)
 
 -- * Kernel Specification
 
@@ -162,7 +168,8 @@ data KernSpec = KernSpec [KernSection]
 -- | The kernel specification is made up of several sections similarly
 --   to the surface specification, and consists of:
 data KernSection
-  = KernSyntax            [Production KernelSymbol]      -- ^ The syntax (productions).
+  = KernSorts             [KernelSort]                   -- ^ Set of kernel sorts (non-terminals).
+  | KernSyntax            [Production KernelSymbol]      -- ^ The syntax (productions).
   | KernStartSymbols      [KernelSymbol]                 -- ^ The start symbols.
   | KernelTemplateOptions [TemplateOption KernelSymbol]  -- ^ The set of template options.
   | KernPriorities      [Priority KernelSymbol]          -- ^ The set of priorities; used for disambiguation.
@@ -173,11 +180,13 @@ data KernSection
 --   marked as either lexical structure of context-free structure.
 data KernelSymbol
   = KCCSym       CharClass                  -- ^ Character classes
-  | KCFSortSym   Sort                       -- ^ Context-free   sorts (non-terminals)
-  | KLexSortSym  Sort                       -- ^ Lexical-syntax sorts (non-terminals)
+  | KSortSym     KernelSort                 -- ^ Sorts (non-terminals)
   | KOptionalSym KernelSymbol               -- ^ Optional symbols (@sym?@)
-  | KCFListSym   Sort   String LMode        -- ^ Lists of lexical symbols (@sym*@ or @sym+@)
-  | KLexListSym  Sort   String LMode        -- ^ Lists of context-free symbols (@sym*@ or @sym+@)
+  | KListSym   KernelSort   String LMode    -- ^ Lists of lexical symbols (@sym*@ or @sym+@)
   | KSequence    KernelSymbol KernelSymbol  -- ^ Sequences of symbols (@sym sym@)
   | KAlternative KernelSymbol KernelSymbol  -- ^ Alternative symbols (@sym | sym@)  
 
+-- | Kernel sorts come in two flavors:
+data KernelSort
+  = KernCFSort String  -- ^ Context-free sorts.
+  | KernLexSort String -- ^ Lexical sorts.
