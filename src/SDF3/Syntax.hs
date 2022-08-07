@@ -42,19 +42,19 @@ data Section
 data Production sym
     -- | An ordinary production of the form
     --      
-    -- sym.const = w {attributes}
+    -- @sym.const = w {attributes}@
     --
-    -- where 'w' is a word over 'SDF3.Symbol'.         
-  = Prod         sym            String [sym]            [Attribute]
+    -- where @w@ is a word over 'SDF3.Symbol'.         
+  = Prod sym String [sym] [Attribute]
     -- | A template production of the form
     --      
-    -- sym.const = [w] {attributes}
+    -- @sym.const = [w] {attributes}@
     --
     -- or
     --
-    -- sym.const = <w> {attributes}
+    -- @sym.const = \<w\> {attributes}@
     -- 
-    -- where 'w' is a word over 'SDF3.TemplateSymbol'.
+    -- where @w@ is a word over 'SDF3.TemplateSymbol'.
   | TemplateProd TemplateSymbol String [TemplateSymbol] [Attribute]
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
@@ -63,29 +63,50 @@ data TemplateOption sym
   | Tokenize [Char]         -- ^ Specifies which characters have layout around them.
   | AttrSym  sym Attribute  -- ^ Mainly used to setup reject rules for keywords.
 
+-- | Priorities are used to place weighted restrictions on productions
+--   to prevent ambiguties; e.g., precedence.
 data Priority sym
-  = TransPriority         [ProductionRef sym]     [ProductionRef sym]
-  | NontransPriority      [ProductionRef sym]     [ProductionRef sym]
-  | IndexTransPriority    (ProductionRef sym) Int (ProductionRef sym)
-  | IndexNontransPriority (ProductionRef sym) Int (ProductionRef sym)  
-  | AttrNontransPriority  (ProductionRef sym) Int (ProductionRef sym)
-  | AttrTransPriority
-    (Attribute, [ProductionRef sym])
-    (Attribute, [ProductionRef sym])
-
-data Restriction sym
-  = Restrict sym Lookahead
-
-data ProductionRef sym
-  = ProdRef sym String
+  = TransPriority         [ProductionRef sym]     [ProductionRef sym] -- ^ The transitive ordering.
   
+  | NontransPriority      [ProductionRef sym]     [ProductionRef sym] -- ^ The non-transitive ordering.
+  
+  | IndexTransPriority    (ProductionRef sym) Int (ProductionRef sym) -- ^ The transitive ordering with an index.
+  
+  | IndexNontransPriority (ProductionRef sym) Int (ProductionRef sym) -- ^ The non-transitive ordering with an index.
+  
+  | AttrNontransPriority                                              -- ^ The transitive ordering with attribute labels.
+    (Attribute, [ProductionRef sym])
+    (Attribute, [ProductionRef sym])
+    
+  | AttrTransPriority                                                 -- ^ The non-transitive ordering with attribute labels.
+    (Attribute, [ProductionRef sym])
+    (Attribute, [ProductionRef sym])
+
+-- | Restrictions filter applications of productions for certain
+--   non-terminals (@sym@) if the following character, the lookahead,
+--   is in a particular character class ('SDF3.Lookahead').
+data Restriction sym
+  = Restrict sym        -- ^ The symbol to restrict.
+             Lookahead  -- ^ A character class
+
+-- | A production reference is of the form:
+--
+--   @sym.const@
+--
+--  where @sym@ is a some non-terminal and @const@ is some constructor.
+data ProductionRef sym
+  = ProdRef sym       -- ^ Some non-terminal.
+            String    -- ^ Some constructor of @sym@.
+
+-- | Symbols are the basic lexical structure of surface
+--   specifications.  They consist of:
 data Symbol
-  = CCSym       CharClass
-  | SortSym     Sort
-  | OptionalSym Symbol
-  | ListSym     Sort   String LMode
-  | Sequence    Symbol Symbol
-  | Alternative Symbol Symbol
+  = CCSym       CharClass            -- ^ Character classes
+  | SortSym     Sort                 -- ^ Sorts (non-terminals)
+  | OptionalSym Symbol               -- ^ Optional symbols (@sym?@)
+  | ListSym     Sort   String LMode  -- ^ Lists of symbols (@sym*@ or @sym+@)
+  | Sequence    Symbol Symbol        -- ^ Sequences of symbols (@sym sym@)
+  | Alternative Symbol Symbol        -- ^ Alternative symbols (@sym | sym@)
 
 data TemplateSymbol
   = TLitSort  Sort
@@ -94,9 +115,11 @@ data TemplateSymbol
   | TLitSym  String
   | TSeqence TemplateSymbol TemplateSymbol
 
--- | A sort is some string, and can be made optional.
-data Sort = SortLit String
-          | Layout
+-- | Sorts define the non-terminals of the specification.
+data Sort = SortLit String  -- ^ A sort defined by the user.
+          | Layout          -- ^ A reserved sort name used to indicate the
+                            --   whitespace that can appear between
+                            --   context-free symbols.
 
 data CharClass
   = Class        [Char]
