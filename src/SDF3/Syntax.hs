@@ -149,17 +149,35 @@ data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can b
 
 -- * Kernel Specification
 
+-- | The kernel specification is the normalized version of the surface
+--   language.  This implies that all imports have been combined into
+--   a single specification, and hence, there is no need for any
+--   module names, and symbols have been explicitly annotated with a
+--   label indicating whether or not they are context free syntax of
+--   lexical syntax.
+--
+--   Therefore, a kernel specficiation is simply a list of kernel sections.
 data KernSpec = KernSpec [KernSection]
 
+-- | The kernel specification is made up of several sections similarly
+--   to the surface specification, and consists of:
 data KernSection
-  = KernSyntax            [Production KernelSymbol]
-  | KernStartSymbols      [KernelSymbol]
-  | KernelTemplateOptions [TemplateOption KernelSymbol]
-  | KernCFPriorities      [Priority KernelSymbol]
-  | KernLexRestriction    [Restriction KernelSymbol]
-  | KernCFRestriction     [Restriction KernelSymbol]  
+  = KernSyntax            [Production KernelSymbol]      -- ^ The syntax (productions).
+  | KernStartSymbols      [KernelSymbol]                 -- ^ The start symbols.
+  | KernelTemplateOptions [TemplateOption KernelSymbol]  -- ^ The set of template options.
+  | KernPriorities      [Priority KernelSymbol]          -- ^ The set of priorities; used for disambiguation.
+  | KernRestrictions    [Restriction KernelSymbol]       -- ^ The set of restrictions; used for disambiguation.
 
+-- | The set of kernel symbols, much like 'SDF3.Symbols', make up the
+--   lexical strucutre of the kernel specification, but sorts are
+--   marked as either lexical structure of context-free structure.
 data KernelSymbol
-  = CFSym  Symbol
-  | LexSym Symbol
+  = KCCSym       CharClass                  -- ^ Character classes
+  | KCFSortSym   Sort                       -- ^ Context-free   sorts (non-terminals)
+  | KLexSortSym  Sort                       -- ^ Lexical-syntax sorts (non-terminals)
+  | KOptionalSym KernelSymbol               -- ^ Optional symbols (@sym?@)
+  | KCFListSym   Sort   String LMode        -- ^ Lists of lexical symbols (@sym*@ or @sym+@)
+  | KLexListSym  Sort   String LMode        -- ^ Lists of context-free symbols (@sym*@ or @sym+@)
+  | KSequence    KernelSymbol KernelSymbol  -- ^ Sequences of symbols (@sym sym@)
+  | KAlternative KernelSymbol KernelSymbol  -- ^ Alternative symbols (@sym | sym@)  
 
