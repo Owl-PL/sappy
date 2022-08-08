@@ -8,14 +8,28 @@
 --   the normalized version of the surface specification.
 module SDF3.Syntax where
 
+import qualified Data.Set as Set
+
 -- * Surface Specification
 
 -- | The surface specification consists of a module name, any imported
 --   specifications and a list of sections.
 data Spec
-  = Spec String    -- ^ The module name.
-         [Spec]    -- ^ All imported specifications.
-         [Section] -- ^ The list of sections making up the specificaiton.
+  = Spec { moduleName :: String,   -- ^ The module name.
+           imports    :: [Spec],   -- ^ All imported specifications.
+           sections   :: [Section] -- ^ The list of sections making up the specificaiton.
+         }
+
+data SpecSorts
+  = SpecSorts { cfSorts  :: Set.Set Sort,
+                lexSorts :: Set.Set Sort
+              }
+
+emptySpecSorts :: SpecSorts
+emptySpecSorts = SpecSorts Set.empty Set.empty
+
+unionSpecSorts :: SpecSorts -> SpecSorts -> SpecSorts
+unionSpecSorts (SpecSorts c1 l1) (SpecSorts c2 l2) = SpecSorts (c1 `Set.union` c2) (l1 `Set.union` l2)
 
 -- | Sections make up the entirity of the specification, and
 --   consist of:
@@ -26,17 +40,17 @@ data Section
   
   | CFSyntax        [Production Symbol]     -- ^ The context-free syntax.
   
-  | LexStartSymbols [Symbol]                -- ^ The lexical start symbols
+  | LexStartSymbols [Sort]                  -- ^ The lexical start symbols
                                             --   (non-terminals).
-  | CFStartSymbols  [Symbol]                -- ^ The context-free start symbols
+  | CFStartSymbols  [Sort]                  -- ^ The context-free start symbols
                                             --   (non-terminals).
-  | TemplateOptions [TemplateOption Symbol] -- ^ The set of template options.
+  | TemplateOptions [TemplateOption Sort]   -- ^ The set of template options.
   
-  | CFPriorities    [Priority Symbol]       -- ^ The set of context-free priorities;
+  | CFPriorities    [Priority Sort]         -- ^ The set of context-free priorities;
                                             --   used for disambiguation.
-  | LexRestriction  [Restriction Symbol]    -- ^ Lexical restrictions;
+  | LexRestriction  [Restriction Sort]      -- ^ Lexical restrictions;
                                             --   used for disambiguation.
-  | CFRestriction   [Restriction Symbol]    -- ^ Context-free restrictions;
+  | CFRestriction   [Restriction Sort]      -- ^ Context-free restrictions;
                                             --   used for disambiguation.
 
 -- | Productions make up the lexical and context-free syntax sections,
@@ -60,44 +74,44 @@ data Production sym
   | TemplateProd Sort String TemplateSymbol [Attribute]
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
-data TemplateOption sym
-  = Keyword  [CharClass]    -- ^ Used to setup follow restrictions on keywords.
-  | Tokenize [Char]         -- ^ Specifies which characters have layout around them.
-  | AttrSym  sym Attribute  -- ^ Mainly used to setup reject rules for keywords.
+data TemplateOption sort
+  = Keyword  [CharClass]     -- ^ Used to setup follow restrictions on keywords.
+  | Tokenize [Char]          -- ^ Specifies which characters have layout around them.
+  | AttrSym  sort Attribute  -- ^ Mainly used to setup reject rules for keywords.
 
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
-data Priority sym
-  = TransPriority         [ProductionRef sym]     [ProductionRef sym] -- ^ The transitive ordering.
+data Priority sort
+  = TransPriority         [ProductionRef sort]     [ProductionRef sort] -- ^ The transitive ordering.
   
-  | NontransPriority      [ProductionRef sym]     [ProductionRef sym] -- ^ The non-transitive ordering.
+  | NontransPriority      [ProductionRef sort]     [ProductionRef sort] -- ^ The non-transitive ordering.
   
-  | IndexTransPriority    (ProductionRef sym) Int (ProductionRef sym) -- ^ The transitive ordering with an index.
+  | IndexTransPriority    (ProductionRef sort) Int (ProductionRef sort) -- ^ The transitive ordering with an index.
   
-  | IndexNontransPriority (ProductionRef sym) Int (ProductionRef sym) -- ^ The non-transitive ordering with an index.
+  | IndexNontransPriority (ProductionRef sort) Int (ProductionRef sort) -- ^ The non-transitive ordering with an index.
   
-  | AttrNontransPriority                                              -- ^ The transitive ordering with attribute labels.
-    (Attribute, [ProductionRef sym])
-    (Attribute, [ProductionRef sym])
+  | AttrNontransPriority                                                -- ^ The transitive ordering with attribute labels.
+    (Attribute, [ProductionRef sort])
+    (Attribute, [ProductionRef sort])
     
-  | AttrTransPriority                                                 -- ^ The non-transitive ordering with attribute labels.
-    (Attribute, [ProductionRef sym])
-    (Attribute, [ProductionRef sym])
+  | AttrTransPriority                                                   -- ^ The non-transitive ordering with attribute labels.
+    (Attribute, [ProductionRef sort])
+    (Attribute, [ProductionRef sort])
 
 -- | Restrictions filter applications of productions for certain
---   non-terminals (@sym@) if the following character, the lookahead,
+--   non-terminals (@sort@) if the following character, the lookahead,
 --   is in a particular character class ('SDF3.Lookahead').
-data Restriction sym
-  = Restrict sym        -- ^ The symbol to restrict.
-             Lookahead  -- ^ A character class
+data Restriction sort
+  = Restrict sort        -- ^ The symbol to restrict.
+             Lookahead   -- ^ A character class
 
 -- | A production reference is of the form:
 --
 --   @sym.const@
 --
 --  where @sym@ is a some non-terminal and @const@ is some constructor.
-data ProductionRef sym
-  = ProdRef sym       -- ^ Some non-terminal.
+data ProductionRef sort
+  = ProdRef sort      -- ^ Some non-terminal.
             String    -- ^ Some constructor of @sym@.
 
 -- | Symbols are the basic lexical structure of surface
@@ -170,10 +184,10 @@ data KernSpec = KernSpec [KernSection]
 data KernSection
   = KernSorts             [KernelSort]                   -- ^ Set of kernel sorts (non-terminals).
   | KernSyntax            [Production KernelSymbol]      -- ^ The syntax (productions).
-  | KernStartSymbols      [KernelSymbol]                 -- ^ The start symbols.
-  | KernelTemplateOptions [TemplateOption KernelSymbol]  -- ^ The set of template options.
-  | KernPriorities      [Priority KernelSymbol]          -- ^ The set of priorities; used for disambiguation.
-  | KernRestrictions    [Restriction KernelSymbol]       -- ^ The set of restrictions; used for disambiguation.
+  | KernStartSymbols      [KernelSort]                   -- ^ The start symbols.
+  | KernelTemplateOptions [TemplateOption KernelSort]    -- ^ The set of template options.
+  | KernPriorities        [Priority KernelSort]          -- ^ The set of priorities; used for disambiguation.
+  | KernRestrictions      [Restriction KernelSort]       -- ^ The set of restrictions; used for disambiguation.
 
 -- | The set of kernel symbols, much like 'SDF3.Symbols', make up the
 --   lexical strucutre of the kernel specification, but sorts are
