@@ -6,7 +6,7 @@
 --
 --   The first is the specification defined by the user while the second is
 --   the normalized version of the surface specification.
-module SDF3.Syntax where
+module SDF3.Spec where
 
 import qualified Data.Set as Set
 

@@ -1,7 +1,6 @@
-module SDF3.SyntaxValidation where
+module SDF3.SpecValidation where
 
-import SDF3.Syntax
-
+import SDF3.Spec
 import Utils
 
 import qualified Data.Set as Set
