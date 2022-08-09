@@ -13,7 +13,7 @@ import qualified Data.Set as Set
 -- * Surface Specification
 
 -- | The surface specification consists of a module name, any imported
---   specifications and a list of sections.
+--   specifications and a set of sections.
 data Spec
   = Spec { moduleName :: String,         -- ^ The module name.
            imports    :: Set.Set Spec,   -- ^ All imported specifications.
@@ -176,7 +176,7 @@ data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can b
 --   label indicating whether or not they are context free syntax of
 --   lexical syntax.
 --
---   Therefore, a kernel specficiation is simply a list of kernel sections.
+--   Therefore, a kernel specficiation is simply a set of kernel sections.
 data KernSpec = KernSpec (Set.Set (KernSection))
 
 -- | The kernel specification is made up of several sections similarly
