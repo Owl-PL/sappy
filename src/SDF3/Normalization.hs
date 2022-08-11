@@ -86,9 +86,9 @@ normalizeSymbol synb (SortSym sort) = SortSym nsort
 normalizeSymbol synb (OptionalSym sym) = OptionalSym nsym
   where
     nsym = normalizeSymbol synb sym
-normalizeSymbol synb (ListSym sort s m) = ListSym nsort s m
+normalizeSymbol synb (ListSym sym m) = ListSym nsym m
   where
-    nsort = normalizeSort synb sort
+    nsym = normalizeSymbol synb sym
 normalizeSymbol synb (Sequence sym1 sym2) = Sequence nsym1 nsym2
   where
     nsym1 = normalizeSymbol synb sym1

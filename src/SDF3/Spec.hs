@@ -74,6 +74,9 @@ data Production sort
   | TemplateProd sort String (TemplateSymbol sort) (Set.Set Attribute)
   deriving (Eq,Ord)
 
+lexProd :: sort -> (Symbol sort) -> Set.Set Attribute -> Production sort
+lexProd sort = Prod sort ""
+
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sort
   = Keyword  (Set.Set CharClass)  -- ^ Used to setup follow restrictions on keywords.
@@ -125,7 +128,7 @@ data Symbol sort
   = CCSym       CharClass                    -- ^ Character classes
   | SortSym     sort                         -- ^ Sorts (non-terminals)
   | OptionalSym (Symbol sort)                -- ^ Optional symbols (@sym?@)
-  | ListSym     sort   String LMode          -- ^ Lists of symbols (@sym*@ or @sym+@)
+  | ListSym     (Symbol sort) LMode          -- ^ Lists of symbols (@sym*@ or @sym+@)
   | Sequence    (Symbol sort) (Symbol sort)  -- ^ Sequences of symbols (@sym sym@)
   | Alternative (Symbol sort) (Symbol sort)  -- ^ Alternative symbols (@sym | sym@)
   deriving (Eq,Ord)

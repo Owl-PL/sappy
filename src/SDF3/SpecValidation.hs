@@ -106,7 +106,7 @@ sortInProdRef (ProdRef sort _) = sort
 
 sortsInSym :: Symbol Sort -> Set.Set Sort
 sortsInSym (SortSym sort)          = Set.singleton sort
-sortsInSym (ListSym sort _ _)      = Set.singleton sort
+sortsInSym (ListSym sym _)         = sortsInSym sym
 sortsInSym (OptionalSym sym)       = sortsInSym sym
 sortsInSym (Sequence sym1 sym2)    = (sortsInSym sym1) `Set.union` (sortsInSym sym2)
 sortsInSym (Alternative sym1 sym2) = (sortsInSym sym1) `Set.union` (sortsInSym sym2)
