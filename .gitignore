@@ -3,3 +3,4 @@
 /sappy.cabal
 /stack.yaml
 *.lock
+/src/Test/#Fun.hs#

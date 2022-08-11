@@ -10,6 +10,7 @@ lexsorts = Set.fromList $ [SortLit "ID",
                            SortLit "AST",
                            SortLit "COM",
                            SortLit "EOF"]
+           
 lexsyn :: Set.Set (Production Sort)
 lexsyn = Set.fromList $ [lexProd (SortLit "ID")  idProd Set.empty,
                          lexProd (SortLit "INT") intProd Set.empty,
@@ -20,11 +21,10 @@ lexsyn = Set.fromList $ [lexProd (SortLit "ID")  idProd Set.empty,
                          lexProd Layout layoutProd Set.empty,
                          lexProd (SortLit "EOF") (CCSym . Class $ []) Set.empty]
   where
-    azAZ       = CCSym . Class $ ['a'..'z']++['A'..'Z']
-    azAZ09     = CCSym . Class $ ['a'..'z']++['A'..'Z']++['0'..'9']
-    cc09       = CCSym . Class $ ['0'..'9']
-    whitespace = CCSym . Class $ [' ', '\t', '\n', '\r']
-    newlinesCC = Class $ "\n\r"
+    azAZ       = CCSym cc_azAZ
+    azAZ09     = CCSym cc_azAZ09
+    cc09       = CCSym cc_09
+    whitespace = CCSym cc_ws    
     idProd     = Sequence azAZ (ListSym azAZ09 ZeroManyList)
     intProd    = Sequence (OptionalSym . CCSym . Class $ "-")
                           (ListSym cc09 OneManyList)
@@ -38,8 +38,14 @@ lexsyn = Set.fromList $ [lexProd (SortLit "ID")  idProd Set.empty,
     astProd = CCSym . Class $ "*"
     layoutProd =
       (CCSym . Class $ "//") `Sequence`
-      (ListSym (CCSym . Complement $ newlinesCC) ZeroManyList) `Sequence`
-      ((CCSym newlinesCC) `Alternative` (SortSym . SortLit $ "EOF"))
+      (ListSym (CCSym . Complement $ cc_newlines) ZeroManyList) `Sequence`
+      ((CCSym cc_newlines) `Alternative` (SortSym . SortLit $ "EOF"))
+
+lexRestrictions :: Set.Set (Restriction Sort)
+lexRestrictions = Set.fromList $ [Restrict (SortLit "ID") (Set.singleton cc_azAZ09),
+                                  Restrict (SortLit "INT") (Set.singleton cc_09),
+                                  Restrict (SortLit "AST") (Set.singleton (Class "/")),
+                                  Restrict (SortLit "EOF") (Set.singleton (Complement . Class $ []))]
 
 cfsorts :: Set.Set Sort
 cfsorts = Set.fromList $ [SortLit "Exp",

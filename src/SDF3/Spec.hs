@@ -159,6 +159,14 @@ data CharClass
   | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
   deriving (Eq,Ord)
 
+cc_az       = Class $ ['a'..'z']
+cc_AZ       = Class $ ['A'..'Z']
+cc_09       = Class $ ['0'..'9']
+cc_azAZ     = Union cc_az cc_AZ
+cc_azAZ09   = Union cc_azAZ cc_09
+cc_newlines = Class $ "\n\r"
+cc_ws       = Union (Class " \t") cc_newlines
+
 -- | Attributes describe restrictions on productinos. They consist of:
 data Attribute
   = Left            -- ^ Left associative.
