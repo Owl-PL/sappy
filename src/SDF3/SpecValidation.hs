@@ -45,7 +45,7 @@ sectionLexSorts :: Section -> Set.Set Sort
 sectionLexSorts (LexSorts sorts) = sorts
 sectionLexSorts _ = Set.empty                   
 
-validProduction :: Set.Set Sort -> Production Symbol -> Bool
+validProduction :: Set.Set Sort -> Production Sort -> Bool
 validProduction sorts (Prod sort const sym _)
   = (sort `Set.member` sorts) && (symSorts `Set.isSubsetOf` sorts)
  where
@@ -104,7 +104,7 @@ sortsInProdRefs = indexedInsert sortInProdRef
 sortInProdRef :: ProductionRef Sort -> Sort
 sortInProdRef (ProdRef sort _) = sort
 
-sortsInSym :: Symbol -> Set.Set Sort
+sortsInSym :: Symbol Sort -> Set.Set Sort
 sortsInSym (SortSym sort)          = Set.singleton sort
 sortsInSym (ListSym sort _ _)      = Set.singleton sort
 sortsInSym (OptionalSym sym)       = sortsInSym sym
@@ -112,7 +112,7 @@ sortsInSym (Sequence sym1 sym2)    = (sortsInSym sym1) `Set.union` (sortsInSym s
 sortsInSym (Alternative sym1 sym2) = (sortsInSym sym1) `Set.union` (sortsInSym sym2)
 sortsInSym _ = Set.empty
 
-sortsInTSym :: TemplateSymbol -> Set.Set Sort
+sortsInTSym :: TemplateSymbol Sort -> Set.Set Sort
 sortsInTSym (TLitSort sort) = Set.singleton sort
 sortsInTSym (TOptSort sort) = Set.singleton sort
 sortsInTSym (TListSort sort _ _) = Set.singleton sort

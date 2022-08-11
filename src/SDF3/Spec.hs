@@ -36,9 +36,9 @@ unionSpecSorts (SpecSorts c1 l1) (SpecSorts c2 l2) = SpecSorts (c1 `Set.union` c
 data Section
   = CFSorts         (Set.Set Sort)                   -- ^ Context-free sorts (non-terminals).
   | LexSorts        (Set.Set Sort)                   -- ^ Lexical syntax sorts (non-terminals).
-  | LexSyntax       (Set.Set (Production Symbol))    -- ^ The lexical syntax.
+  | LexSyntax       (Set.Set (Production Sort))    -- ^ The lexical syntax.
   
-  | CFSyntax        (Set.Set (Production Symbol))    -- ^ The context-free syntax.
+  | CFSyntax        (Set.Set (Production Sort))    -- ^ The context-free syntax.
   
   | LexStartSymbols (Set.Set Sort)                   -- ^ The lexical start symbols
                                                      --   (non-terminals).
@@ -55,13 +55,13 @@ data Section
 
 -- | Productions make up the lexical and context-free syntax sections,
 --   and consist of:
-data Production sym
+data Production sort
     -- | An ordinary production of the form
     --      
     -- @sym.const = sym {attributes}@
-    --
+    -- 
     -- where @sym@ is a word over 'SDF3.Symbol'.         
-  = Prod Sort String sym (Set.Set Attribute)
+  = Prod sort String (Symbol sort) (Set.Set Attribute)
     -- | A template production of the form
     --      
     -- @sym.const = [w] {attributes}@
@@ -71,13 +71,15 @@ data Production sym
     -- @sym.const = \<w\> {attributes}@
     -- 
     -- where @w@ is a word over 'SDF3.TemplateSymbol'.
-  | TemplateProd Sort String TemplateSymbol (Set.Set Attribute)
+  | TemplateProd sort String (TemplateSymbol sort) (Set.Set Attribute)
+  deriving (Eq,Ord)
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sort
   = Keyword  (Set.Set CharClass)  -- ^ Used to setup follow restrictions on keywords.
   | Tokenize [Char]               -- ^ Specifies which characters have layout around them.
   | AttrSym  sort Attribute       -- ^ Mainly used to setup reject rules for keywords.
+  deriving (Eq,Ord)
 
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
@@ -97,6 +99,7 @@ data Priority sort
   | AttrTransPriority                                                                       -- ^ The non-transitive ordering with attribute labels.
     (Attribute, (Set.Set (ProductionRef sort)))
     (Attribute, (Set.Set (ProductionRef sort)))
+  deriving (Eq,Ord)
 
 -- | Restrictions filter applications of productions for certain
 --   non-terminals (@sort@) if the following character, the lookahead,
@@ -104,6 +107,7 @@ data Priority sort
 data Restriction sort
   = Restrict sort        -- ^ The symbol to restrict.
              Lookahead   -- ^ A character class
+  deriving (Eq,Ord)
 
 -- | A production reference is of the form:
 --
@@ -113,26 +117,28 @@ data Restriction sort
 data ProductionRef sort
   = ProdRef sort      -- ^ Some non-terminal.
             String    -- ^ Some constructor of @sym@.
+  deriving (Eq,Ord)
 
 -- | Symbols are the basic lexical structure of surface
 --   specifications.  They consist of:
-data Symbol
-  = CCSym       CharClass            -- ^ Character classes
-  | SortSym     Sort                 -- ^ Sorts (non-terminals)
-  | OptionalSym Symbol               -- ^ Optional symbols (@sym?@)
-  | ListSym     Sort   String LMode  -- ^ Lists of symbols (@sym*@ or @sym+@)
-  | Sequence    Symbol Symbol        -- ^ Sequences of symbols (@sym sym@)
-  | Alternative Symbol Symbol        -- ^ Alternative symbols (@sym | sym@)
+data Symbol sort
+  = CCSym       CharClass                    -- ^ Character classes
+  | SortSym     sort                         -- ^ Sorts (non-terminals)
+  | OptionalSym (Symbol sort)                -- ^ Optional symbols (@sym?@)
+  | ListSym     sort   String LMode          -- ^ Lists of symbols (@sym*@ or @sym+@)
+  | Sequence    (Symbol sort) (Symbol sort)  -- ^ Sequences of symbols (@sym sym@)
+  | Alternative (Symbol sort) (Symbol sort)  -- ^ Alternative symbols (@sym | sym@)
   deriving (Eq,Ord)
 
 -- | Template symbols are the basic lexical structure of template
 --   productions in the surface specification.  They consist of:
-data TemplateSymbol 
-  = TLitSym  String                         -- ^ Literal symbols (strings)
-  | TLitSort  Sort                          -- ^ Sorts (non-terminals)
-  | TOptSort Sort                           -- ^ Optional sorts (@sym?@)
-  | TListSort Sort String LMode             -- ^ Lists of symbols (@sym*@ or @sym+@)  
-  | TSeqence TemplateSymbol TemplateSymbol  -- ^ Sequences of symbols (@sym sym@)
+data TemplateSymbol sort
+  = TLitSym   String                                      -- ^ Literal symbols (strings)
+  | TLitSort  sort                                        -- ^ Sorts (non-terminals)
+  | TOptSort  sort                                        -- ^ Optional sorts (@sym?@)
+  | TListSort sort String LMode                           -- ^ Lists of symbols (@sym*@ or @sym+@)  
+  | TSeqence (TemplateSymbol sort) (TemplateSymbol sort)  -- ^ Sequences of symbols (@sym sym@)
+  deriving (Eq,Ord)
 
 -- | Sorts define the non-terminals of the specification.
 data Sort = SortLit String  -- ^ A sort defined by the user.
@@ -158,6 +164,7 @@ data Attribute
   | Assoc           -- ^ Associative.
   | Bracket         -- ^ Bracketing.
   | Reject          -- ^ Keyword reservation.
+  deriving (Eq,Ord)
 
 -- | A set of character classes that describe the lookahead symbol.
 type Lookahead = Set.Set CharClass
@@ -173,34 +180,76 @@ data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can b
 --   language.  This implies that all imports have been combined into
 --   a single specification, and hence, there is no need for any
 --   module names, and symbols have been explicitly annotated with a
---   label indicating whether or not they are context free syntax of
+--   label indicating whether or not they are context-free syntax of
 --   lexical syntax.
 --
 --   Therefore, a kernel specficiation is simply a set of kernel sections.
-data KernSpec = KernSpec (Set.Set (KernSection))
+data KernSpec = KernSpec {
+  kernSorts             :: Set.Set KernelSort,                     -- ^ Set of kernel sorts (non-terminals).
+  kernSyntax            :: Set.Set (Production KernelSort),        -- ^ The syntax (productions).
+  kernStartSymbols      :: Set.Set (KernelSort),                   -- ^ The start symbols.
+  kernTemplateOptions   :: Set.Set (TemplateOption KernelSort),    -- ^ The set of template options.
+  kernPriorities        :: Set.Set (Priority KernelSort),          -- ^ The set of priorities; used for disambiguation.
+  kernRestrictions      :: Set.Set (Restriction KernelSort)        -- ^ The set of restrictions; used for disambiguation.
+} 
 
--- | The kernel specification is made up of several sections similarly
---   to the surface specification, and consists of:
-data KernSection
-  = KernSorts             (Set.Set (KernelSort))                   -- ^ Set of kernel sorts (non-terminals).
-  | KernSyntax            (Set.Set (Production KernelSymbol))      -- ^ The syntax (productions).
-  | KernStartSymbols      (Set.Set (KernelSort))                   -- ^ The start symbols.
-  | KernelTemplateOptions (Set.Set (TemplateOption KernelSort))    -- ^ The set of template options.
-  | KernPriorities        (Set.Set (Priority KernelSort))          -- ^ The set of priorities; used for disambiguation.
-  | KernRestrictions      (Set.Set (Restriction KernelSort))       -- ^ The set of restrictions; used for disambiguation.
-
--- | The set of kernel symbols, much like 'SDF3.Symbols', make up the
---   lexical strucutre of the kernel specification, but sorts are
---   marked as either lexical structure of context-free structure.
-data KernelSymbol
-  = KCCSym       CharClass                  -- ^ Character classes
-  | KSortSym     KernelSort                 -- ^ Sorts (non-terminals)
-  | KOptionalSym KernelSymbol               -- ^ Optional symbols (@sym?@)
-  | KListSym     KernelSort   String LMode  -- ^ Lists of lexical symbols (@sym*@ or @sym+@)
-  | KSequence    KernelSymbol KernelSymbol  -- ^ Sequences of symbols (@sym sym@)
-  | KAlternative KernelSymbol KernelSymbol  -- ^ Alternative symbols (@sym | sym@)  
-
--- | Kernel sorts come in two flavors:
+-- | Kernel sorts come in three flavors:
 data KernelSort
   = KernCFSort String  -- ^ Context-free sorts.
   | KernLexSort String -- ^ Lexical sorts.
+  | KernLayout         -- ^ Indicates where whitespace can be placed.
+  deriving (Eq,Ord)
+
+emptyKernSpec :: KernSpec
+emptyKernSpec = KernSpec Set.empty Set.empty Set.empty Set.empty Set.empty Set.empty
+
+unionKernSpec :: KernSpec -> KernSpec -> KernSpec
+unionKernSpec (KernSpec ksorts1 ksyn1 kst1 kto1 kpr1 krs1) (KernSpec ksorts2 ksyn2 kst2 kto2 kpr2 krs2)
+  = KernSpec (ksorts1 `Set.union` ksorts2)
+             (ksyn1   `Set.union` ksyn2)
+             (kst1    `Set.union` kst2)
+             (kto1    `Set.union` kto2)
+             (kpr1    `Set.union` kpr2)
+             (krs1    `Set.union` krs2)
+
+getKernSorts :: KernSpec -> Set.Set KernelSort
+getKernSorts = kernSorts
+
+setKernSorts :: KernSpec -> Set.Set KernelSort -> KernSpec
+setKernSorts (KernSpec _ ksyn kstartsyms ktopts kpris kres) ksorts =
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
+
+getKernSyntax :: KernSpec -> Set.Set (Production KernelSort)
+getKernSyntax = kernSyntax
+
+setKernSyntax :: KernSpec -> Set.Set (Production KernelSort) -> KernSpec
+setKernSyntax (KernSpec ksorts _ kstartsyms ktopts kpris kres) ksyn =  
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
+
+getKernStartSymbols :: KernSpec -> Set.Set (KernelSort) 
+getKernStartSymbols = kernStartSymbols
+
+setKernStartSymbols :: KernSpec -> Set.Set (KernelSort) -> KernSpec
+setKernStartSymbols (KernSpec ksorts ksyn _ ktopts kpris kres) kstartsyms = 
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
+
+getKernTemplateOptions :: KernSpec -> Set.Set (TemplateOption KernelSort)
+getKernTemplateOptions = kernTemplateOptions
+
+setKernTemplateOptions :: KernSpec -> Set.Set (TemplateOption KernelSort) -> KernSpec
+setKernTemplateOptions (KernSpec ksorts ksyn kstartsyms _ kpris kres) ktopts = 
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
+
+getKernPriorities :: KernSpec -> Set.Set (Priority KernelSort)
+getKernPriorities = kernPriorities
+
+setKernPriorities :: KernSpec -> Set.Set (Priority KernelSort) -> KernSpec
+setKernPriorities (KernSpec ksorts ksyn kstartsyms ktopts _ kres) kpris =
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
+
+getKernRestrictions :: KernSpec -> Set.Set (Restriction KernelSort)
+getKernRestrictions = kernRestrictions
+
+setKernRestrictions :: KernSpec -> Set.Set (Restriction KernelSort) -> KernSpec
+setKernRestrictions (KernSpec ksorts ksyn kstartsyms ktopts kpris _) kres = 
+  KernSpec ksorts ksyn kstartsyms ktopts kpris kres
