@@ -108,8 +108,8 @@ data Priority sort
 --   non-terminals (@sort@) if the following character, the lookahead,
 --   is in a particular character class ('SDF3.Lookahead').
 data Restriction sort
-  = Restrict sort        -- ^ The symbol to restrict.
-             Lookahead   -- ^ A character class
+  = Restrict (Symbol sort)  -- ^ The symbol to restrict.
+             Lookahead      -- ^ A character class
   deriving (Eq,Ord)
 
 -- | A production reference is of the form:
@@ -157,6 +157,7 @@ data CharClass
   | Difference   CharClass CharClass   -- ^ The difference of two character classes.
   | Union        CharClass CharClass   -- ^ The union of two character classes.
   | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
+  | Comp     CharClass CharClass       -- ^ Composition of character classes.
   deriving (Eq,Ord)
 
 cc_az       = Class $ ['a'..'z']

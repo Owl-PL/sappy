@@ -93,10 +93,10 @@ validPriority sorts (AttrNontransPriority (_, p1) (_, p2))
     p2Sorts = sortsInProdRefs p2
 
 sortsInRestriction :: Set.Set (Restriction Sort) -> Set.Set Sort
-sortsInRestriction = indexedInsert sortInRestriction
+sortsInRestriction = indexedUnion sortInRestriction
 
-sortInRestriction :: Restriction Sort -> Sort
-sortInRestriction (Restrict sort _) = sort
+sortInRestriction :: Restriction Sort -> Set.Set Sort
+sortInRestriction (Restrict sym _) = sortsInSym sym
 
 sortsInProdRefs :: Set.Set (ProductionRef Sort) -> Set.Set Sort
 sortsInProdRefs = indexedInsert sortInProdRef

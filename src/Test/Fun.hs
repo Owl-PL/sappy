@@ -4,6 +4,7 @@ import SDF3.Spec
 
 import qualified Data.Set as Set
 
+-- Module: lex
 lexsorts :: Set.Set Sort
 lexsorts = Set.fromList $ [SortLit "ID",
                            SortLit "INT",
@@ -42,11 +43,18 @@ lexsyn = Set.fromList $ [lexProd (SortLit "ID")  idProd Set.empty,
       ((CCSym cc_newlines) `Alternative` (SortSym . SortLit $ "EOF"))
 
 lexRestrictions :: Set.Set (Restriction Sort)
-lexRestrictions = Set.fromList $ [Restrict (SortLit "ID") (Set.singleton cc_azAZ09),
-                                  Restrict (SortLit "INT") (Set.singleton cc_09),
-                                  Restrict (SortLit "AST") (Set.singleton (Class "/")),
-                                  Restrict (SortLit "EOF") (Set.singleton (Complement . Class $ []))]
+lexRestrictions = Set.fromList $ [Restrict (SortSym . SortLit $ "ID") (Set.singleton cc_azAZ09),
+                                  Restrict (SortSym . SortLit $ "INT") (Set.singleton cc_09),
+                                  Restrict (SortSym . SortLit $ "AST") (Set.singleton (Class "/")),
+                                  Restrict (SortSym . SortLit $ "EOF") (Set.singleton (Complement . Class $ []))]
 
+lexCFRestrictions :: Set.Set (Restriction Sort)
+lexCFRestrictions = Set.fromList $ [Restrict (CCSym . Class $ "-") (Set.singleton cc_09),
+                                    Restrict (OptionalSym (SortSym Layout)) (Set.singleton cc_ws),
+                                    Restrict (OptionalSym (SortSym Layout)) (Set.singleton $ (Comp (Class $ "/") (Class $ "/"))),
+                                    Restrict (OptionalSym (SortSym Layout)) (Set.singleton $ (Comp (Class $ "/") (Class $ "*")))]
+
+-- Module: fun
 cfsorts :: Set.Set Sort
 cfsorts = Set.fromList $ [SortLit "Exp",
                           SortLit "Case",

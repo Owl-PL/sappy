@@ -164,9 +164,9 @@ normalizePriority (AttrTransPriority (attr1, pset1) (attr2, pset2))
     npset2 = Set.map (normalizeProductionRef CF) pset2
 
 normalizeRestriction :: Syn -> Restriction Sort -> Restriction KernelSort
-normalizeRestriction synb (Restrict sort lh) = Restrict nsort lh
+normalizeRestriction synb (Restrict sym lh) = Restrict nsym lh
   where
-    nsort = normalizeSort synb sort
+    nsym = normalizeSymbol synb sym
 
 normalizeProductionRef :: Syn -> ProductionRef Sort -> ProductionRef KernelSort
 normalizeProductionRef synb (ProdRef sort const) = ProdRef nsort const
