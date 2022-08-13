@@ -117,5 +117,24 @@ cfSyntax = Set.fromList [
   TemplateProd (SortLit "Exp") "Match" ((TLitSym "match") `TSequence`
                                         (TLitSort . SortLit $ "Exp") `TSequence`
                                         (TLitSym "with") `TSequence`
-                                        (TListSym (TLitSort . SortLit $ "Case") "\n" OneManyList)) (Set.singleton LongestMatch)
+                                        (TListSym (TLitSort . SortLit $ "Case") "\n" OneManyList)) (Set.singleton LongestMatch),
+
+  -- Bnd.Bnd = [<ID> = <Exp>]
+  TemplateProd (SortLit "Bnd") "Bnd" ((TLitSort . SortLit $ "ID") `TSequence`
+                                      (TLitSym "=") `TSequence`
+                                      (TLitSort . SortLit $ "Exp")) Set.empty,
+
+  -- Case.Case = [| <Pat> -> <Exp>]
+  TemplateProd (SortLit "Case") "Case" ((TLitSym "|") `TSequence`
+                                        (TLitSort . SortLit $ "Pat") `TSequence`
+                                        (TLitSym "->") `TSequence`
+                                        (TLitSort . SortLit $ "Exp")) Set.empty,
+
+  -- Pat.PApp = [<Pat> <Pat>] {left}
+  TemplateProd (SortLit "Pat") "PApp" ((TLitSort . SortLit $ "Pat") `TSequence` (TLitSort . SortLit $ "Pat")) (Set.singleton SDF3.Spec.Left),
+
+  -- Pat = [(<Pat>)] {bracket}
+  TemplateProd (SortLit "Pat") "" ((TLitSym "(") `TSequence`
+                                   (TLitSort . SortLit $ "Pat") `TSequence`
+                                   (TLitSym ")")) (Set.singleton Bracket)
   ]
