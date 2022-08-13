@@ -106,10 +106,10 @@ normalizeTemplateSymbol synb (TLitSort sort) = TLitSort nsort
 normalizeTemplateSymbol synb (TOptSort sort) = TOptSort nsort
   where
     nsort = normalizeSort synb sort 
-normalizeTemplateSymbol synb (TListSort sort s m) = TListSort nsort s m
+normalizeTemplateSymbol synb (TListSym tsym sep m) = TListSym ntsym sep m
   where
-    nsort = normalizeSort synb sort
-normalizeTemplateSymbol synb (TSeqence tsym1 tsym2) = TSeqence ntsym1 ntsym2
+    ntsym = normalizeTemplateSymbol synb tsym
+normalizeTemplateSymbol synb (TSequence tsym1 tsym2) = TSequence ntsym1 ntsym2
   where
     ntsym1 = normalizeTemplateSymbol synb tsym1 
     ntsym2 = normalizeTemplateSymbol synb tsym2

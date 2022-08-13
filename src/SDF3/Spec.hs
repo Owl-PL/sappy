@@ -136,11 +136,16 @@ data Symbol sort
 -- | Template symbols are the basic lexical structure of template
 --   productions in the surface specification.  They consist of:
 data TemplateSymbol sort
-  = TLitSym   String                                      -- ^ Literal symbols (strings)
-  | TLitSort  sort                                        -- ^ Sorts (non-terminals)
-  | TOptSort  sort                                        -- ^ Optional sorts (@sym?@)
-  | TListSort sort String LMode                           -- ^ Lists of symbols (@sym*@ or @sym+@)  
-  | TSeqence (TemplateSymbol sort) (TemplateSymbol sort)  -- ^ Sequences of symbols (@sym sym@)
+  = TLitSym   String                                       -- ^ Literal symbols (strings)
+  | TLitSort  sort                                         -- ^ Sorts (non-terminals)
+  | TOptSort  sort                                         -- ^ Optional sorts (@sym?@)
+  
+  -- | Lists of symbols (@sym*@ or @sym+@), and list of symbols with a separator (@[sym sep]*@ or @[sym sep]+@)
+  | TListSym
+    (TemplateSymbol sort) -- ^ The symbol.
+    String                -- ^ The separator.
+    LMode                 -- ^ The mode of the list.
+  | TSequence (TemplateSymbol sort) (TemplateSymbol sort)  -- ^ Sequences of symbols (@sym sym@)
   deriving (Eq,Ord)
 
 -- | Sorts define the non-terminals of the specification.
@@ -157,7 +162,7 @@ data CharClass
   | Difference   CharClass CharClass   -- ^ The difference of two character classes.
   | Union        CharClass CharClass   -- ^ The union of two character classes.
   | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
-  | Comp     CharClass CharClass       -- ^ Composition of character classes.
+  | Concat       CharClass CharClass   -- ^ Concatenation of character classes.
   deriving (Eq,Ord)
 
 cc_az       = Class $ ['a'..'z']
@@ -176,6 +181,7 @@ data Attribute
   | Assoc           -- ^ Associative.
   | Bracket         -- ^ Bracketing.
   | Reject          -- ^ Keyword reservation.
+  | LongestMatch    -- ^ Longest Match.
   deriving (Eq,Ord)
 
 -- | A set of character classes that describe the lookahead symbol.

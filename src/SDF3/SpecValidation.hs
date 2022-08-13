@@ -113,8 +113,8 @@ sortsInSym (Alternative sym1 sym2) = (sortsInSym sym1) `Set.union` (sortsInSym s
 sortsInSym _ = Set.empty
 
 sortsInTSym :: TemplateSymbol Sort -> Set.Set Sort
-sortsInTSym (TLitSort sort) = Set.singleton sort
-sortsInTSym (TOptSort sort) = Set.singleton sort
-sortsInTSym (TListSort sort _ _) = Set.singleton sort
-sortsInTSym (TSeqence tsym1 tsym2) = (sortsInTSym tsym1) `Set.union` (sortsInTSym tsym2)
-sortsInTSym _ = Set.empty
+sortsInTSym (TLitSort sort)         = Set.singleton sort
+sortsInTSym (TOptSort sort)         = Set.singleton sort
+sortsInTSym (TListSym tsym _ _)     = sortsInTSym tsym
+sortsInTSym (TSequence tsym1 tsym2) = (sortsInTSym tsym1) `Set.union` (sortsInTSym tsym2)
+sortsInTSym _                       = Set.empty
