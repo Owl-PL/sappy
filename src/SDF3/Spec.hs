@@ -87,36 +87,21 @@ data TemplateOption sort
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
 data Priority sort
-  = TransPriorityEl       (Set.Set (ProductionRef sort))     (Set.Set (ProductionRef sort)) -- ^ The transitive ordering on elements.
-  | TransPriority         (Set.Set (ProductionRef sort))     (Priority sort)                -- ^ The transitive ordering.
+  = TransPriorityEl         (Set.Set (ProductionRef sort)) (Set.Set (ProductionRef sort)) -- ^ The transitive ordering on elements.
   
-  | NontransPriorityEl    (Set.Set (ProductionRef sort))     (Set.Set (ProductionRef sort)) -- ^ The non-transitive ordering on elements.
-
-  | NontransPriority      (Set.Set (ProductionRef sort))     (Priority sort)                -- ^ The non-transitive ordering.
+  | TransPriority           (Set.Set (ProductionRef sort)) (Priority sort)                -- ^ The transitive ordering.
   
-  | IndexTransPriorityEl  (ProductionRef sort) Int (ProductionRef sort)                     -- ^ The transitive ordering with an index on elements.
+  | NontransPriorityEl      (Set.Set (ProductionRef sort)) (Set.Set (ProductionRef sort)) -- ^ The non-transitive ordering on elements.
 
-  | IndexTransPriority    (ProductionRef sort) Int (Priority sort)                          -- ^ The transitive ordering with an index.
+  | NontransPriority        (Set.Set (ProductionRef sort)) (Priority sort)                -- ^ The non-transitive ordering.
+  
+  | IndexTransPriorityEl    (ProductionRef sort) Int (ProductionRef sort)                     -- ^ The transitive ordering with an index on elements.
+
+  | IndexTransPriority      (ProductionRef sort) Int (Priority sort)                          -- ^ The transitive ordering with an index.
   
   | IndexNontransPriorityEl (ProductionRef sort) Int (ProductionRef sort)                   -- ^ The non-transitive ordering with an index on elements.
 
-  | IndexNontransPriority   (ProductionRef sort) Int (Priority sort)                        -- ^ The non-transitive ordering with an index.
-  
-  | AttrNontransPriorityEl                                                                  -- ^ The transitive ordering with attribute labels on elements.
-    (Attribute, (Set.Set (ProductionRef sort)))
-    (Attribute, (Set.Set (ProductionRef sort)))
-
-  | AttrNontransPriority                                                                    -- ^ The transitive ordering with attribute labels.
-    (Attribute, (Set.Set (ProductionRef sort)))
-    (Priority sort)
-    
-  | AttrTransPriorityEl                                                                     -- ^ The non-transitive ordering with attribute labels on elements.
-    (Attribute, (Set.Set (ProductionRef sort)))
-    (Attribute, (Set.Set (ProductionRef sort)))
-
-  | AttrTransPriority                                                                       -- ^ The non-transitive ordering with attribute labels.
-    (Attribute, (Set.Set (ProductionRef sort)))
-    (Priority sort)
+  | IndexNontransPriority   (ProductionRef sort) Int (Priority sort)                        -- ^ The non-transitive ordering with an index.  
   deriving (Eq,Ord)
 
 -- | Restrictions filter applications of productions for certain

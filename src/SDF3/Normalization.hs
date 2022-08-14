@@ -175,31 +175,7 @@ normalizePriority (IndexNontransPriorityEl p1 i p2) = IndexNontransPriorityEl np
 normalizePriority (IndexNontransPriority p i next) = IndexNontransPriority np i nnext
   where
     np = normalizeProductionRef CF p
-    nnext = normalizePriority next
-    
-normalizePriority (AttrNontransPriorityEl (attr1, pset1) (attr2, pset2))
-  = AttrNontransPriorityEl (attr1, npset1) (attr2, npset2)
-  where
-    npset1 = Set.map (normalizeProductionRef CF) pset1
-    npset2 = Set.map (normalizeProductionRef CF) pset2
-
-normalizePriority (AttrNontransPriority (attr, pset) next)
-  = AttrNontransPriority (attr, npset) nnext
-  where
-    npset = Set.map (normalizeProductionRef CF) pset
-    nnext = normalizePriority next
-    
-normalizePriority (AttrTransPriorityEl (attr1, pset1) (attr2, pset2))
-  = AttrTransPriorityEl (attr1, npset1) (attr2, npset2)
-  where
-    npset1 = Set.map (normalizeProductionRef CF) pset1
-    npset2 = Set.map (normalizeProductionRef CF) pset2
-
-normalizePriority (AttrTransPriority (attr, pset) next)
-  = AttrTransPriority (attr, npset) nnext
-  where
-    npset = Set.map (normalizeProductionRef CF) pset
-    nnext = normalizePriority next
+    nnext = normalizePriority next   
 
 normalizeRestriction :: Syn -> Restriction Sort -> Restriction KernelSort
 normalizeRestriction synb (Restrict sym lh) = Restrict nsym lh
