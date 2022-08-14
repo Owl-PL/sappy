@@ -61,36 +61,71 @@ validTemplateOption sorts (AttrSym sort _) = sort `Set.member` sorts
 validTemplateOption _ _ = True    
 
 validPriority :: Set.Set Sort -> Priority Sort -> Bool
-validPriority sorts (TransPriority p1 p2)
+validPriority sorts (TransPriorityEl p1 p2)
   = (p1Sorts `Set.isSubsetOf` sorts) && (p2Sorts `Set.isSubsetOf` sorts)
   where
     p1Sorts = sortsInProdRefs p1
     p2Sorts = sortsInProdRefs p2
-validPriority sorts (NontransPriority p1 p2)
+    
+validPriority sorts (TransPriority p next)
+  = (pSorts `Set.isSubsetOf` sorts) && (validPriority sorts next)
+  where
+    pSorts = sortsInProdRefs p
+    
+validPriority sorts (NontransPriorityEl p1 p2)
   = (p1Sorts `Set.isSubsetOf` sorts) && (p2Sorts `Set.isSubsetOf` sorts)
   where
     p1Sorts = sortsInProdRefs p1
     p2Sorts = sortsInProdRefs p2
-validPriority sorts (IndexTransPriority p1 _ p2)
+
+validPriority sorts (NontransPriority p next)
+  = (pSorts `Set.isSubsetOf` sorts) && (validPriority sorts next)
+  where
+    pSorts = sortsInProdRefs p
+    
+validPriority sorts (IndexTransPriorityEl p1 _ p2)
   = (p1Sort `Set.member` sorts) && (p2Sort `Set.member` sorts)
   where
     p1Sort = sortInProdRef p1
     p2Sort = sortInProdRef p2
-validPriority sorts (IndexNontransPriority p1 _ p2)
+
+validPriority sorts (IndexTransPriority p _ next)
+  = (pSort `Set.member` sorts) && (validPriority sorts next)
+  where
+    pSort = sortInProdRef p
+    
+validPriority sorts (IndexNontransPriorityEl p1 _ p2)
   = (p1Sort `Set.member` sorts) && (p2Sort `Set.member` sorts)
   where
     p1Sort = sortInProdRef p1
     p2Sort = sortInProdRef p2
-validPriority sorts (AttrTransPriority (_, p1) (_, p2))
+
+validPriority sorts (IndexNontransPriority p _ next)
+  = (pSort `Set.member` sorts) && (validPriority sorts next)
+  where
+    pSort = sortInProdRef p
+    
+validPriority sorts (AttrTransPriorityEl (_, p1) (_, p2))
   = (p1Sorts `Set.isSubsetOf` sorts) && (p2Sorts `Set.isSubsetOf` sorts)
   where
     p1Sorts = sortsInProdRefs p1
     p2Sorts = sortsInProdRefs p2
-validPriority sorts (AttrNontransPriority (_, p1) (_, p2))
+
+validPriority sorts (AttrTransPriority (_, p) next)
+  = (pSorts `Set.isSubsetOf` sorts) && (validPriority sorts next)
+  where
+    pSorts = sortsInProdRefs p
+    
+validPriority sorts (AttrNontransPriorityEl (_, p1) (_, p2))
   = (p1Sorts `Set.isSubsetOf` sorts) && (p2Sorts `Set.isSubsetOf` sorts)
   where
     p1Sorts = sortsInProdRefs p1
     p2Sorts = sortsInProdRefs p2
+
+validPriority sorts (AttrNontransPriority (_, p) next)
+  = (pSorts `Set.isSubsetOf` sorts) && (validPriority sorts next)
+  where
+    pSorts = sortsInProdRefs p
 
 sortsInRestriction :: Set.Set (Restriction Sort) -> Set.Set Sort
 sortsInRestriction = indexedUnion sortInRestriction

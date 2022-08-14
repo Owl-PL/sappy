@@ -138,3 +138,9 @@ cfSyntax = Set.fromList [
                                    (TLitSort . SortLit $ "Pat") `TSequence`
                                    (TLitSym ")")) (Set.singleton Bracket)
   ]
+
+-- cfPriorities :: Set.Set (Priority Sort)
+-- cfPriorities = Set.fromList $ [(Set.singleton $ ProdRef (SortLit "Exp") "Min") `TransPriority`
+--                                (Set.singleton $ ProdRef (SortLit "Exp") "App"),
+--                                (Set.singleton $ ProdRef (SortLit "Exp") "App") `AttrTransPriority`
+--                               ]
