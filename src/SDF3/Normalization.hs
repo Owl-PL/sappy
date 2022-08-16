@@ -131,25 +131,25 @@ normalizeProduction synb (TemplateProd sort const tsym attrs) =
 normalizeTemplateOption :: Syn -> TemplateOption Sort -> TemplateOption KernelSort
 normalizeTemplateOption synb (Keyword s) = Keyword s
 normalizeTemplateOption synb (Tokenize cc) = Tokenize cc
-normalizeTemplateOption synb (AttrSym sort attr) = AttrSym nsort attr
+normalizeTemplateOption synb (RejectSym sym attr) = RejectSym nsym attr
   where
-    nsort = normalizeSort synb sort
+    nsym = normalizeSymbol synb sym
 
 normalizePriority :: Priority Sort -> Priority KernelSort
-normalizePriority (TransP tp) = TransP $ normalizeTransPriority tp
+normalizePriority (TransP tp)         = TransP        $ normalizeTransPriority tp
 normalizePriority (IndexedTransP itp) = IndexedTransP $ normalizeIndexedTransPriority itp
-normalizePriority (NonTransP ntp) = NonTransP $ normalizeNonTransPriority ntp
+normalizePriority (NonTransP ntp)     = NonTransP     $ normalizeNonTransPriority ntp
 
 normalizeTransPriority :: TransPriority Sort -> TransPriority KernelSort
-normalizeTransPriority (ElementTP p1 p2)   = ElementTP (normalizeProductionRef CF p1) (normalizeProductionRef CF p2)
+normalizeTransPriority (ElementTP p1 p2)   = ElementTP  (normalizeProductionRef CF p1) (normalizeProductionRef CF p2)
 normalizeTransPriority (ContinueTP p next) = ContinueTP (normalizeProductionRef CF p) (normalizeTransPriority next)
 
 normalizeIndexedTransPriority :: IndexedTransPriority Sort -> IndexedTransPriority KernelSort
-normalizeIndexedTransPriority (ElementITP p1 i p2) = ElementITP (normalizeProductionRef CF p1) i (normalizeProductionRef CF p2)
-normalizeIndexedTransPriority (ContinueITP p i next) = ContinueITP (normalizeProductionRef CF p) i (normalizeIndexedTransPriority next)
+normalizeIndexedTransPriority (ElementITP p1 i p2)   = ElementITP  (normalizeProductionRef CF p1) i (normalizeProductionRef CF p2)
+normalizeIndexedTransPriority (ContinueITP p i next) = ContinueITP (normalizeProductionRef CF p)  i (normalizeIndexedTransPriority next)
 
 normalizeNonTransPriority :: NonTransPriority Sort -> NonTransPriority KernelSort
-normalizeNonTransPriority (ElementNTP p1 p2)  = ElementNTP  (normalizeProductionRef CF p1) (normalizeProductionRef CF p2)
+normalizeNonTransPriority (ElementNTP p1 p2)    = ElementNTP  (normalizeProductionRef CF p1)   (normalizeProductionRef CF p2)
 normalizeNonTransPriority (ElementINTP p1 i p2) = ElementINTP (normalizeProductionRef CF p1) i (normalizeProductionRef CF p2)
 
 normalizeRestriction :: Syn -> Restriction Sort -> Restriction KernelSort

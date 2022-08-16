@@ -79,9 +79,9 @@ lexProd sort = Prod sort ""
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sort
-  = Keyword  (Set.Set CharClass)  -- ^ Used to setup follow restrictions on keywords.
-  | Tokenize [Char]               -- ^ Specifies which characters have layout around them.
-  | AttrSym  sort Attribute       -- ^ Mainly used to setup reject rules for keywords.
+  = Keyword  (Set.Set CharClass)      -- ^ Used to setup follow restrictions on keywords.
+  | Tokenize [Char]                   -- ^ Specifies which characters have layout around them.
+  | RejectSym (Symbol sort) Attribute -- ^ Mainly used to setup reject rules for keywords.
   deriving (Eq,Ord)
 
 -- | Priorities are used to place weighted restrictions on productions

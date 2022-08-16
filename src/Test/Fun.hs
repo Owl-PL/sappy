@@ -139,10 +139,47 @@ cfSyntax = Set.fromList [
                                    (TLitSym ")")) (Set.singleton Bracket)
   ]
 
--- cfPriorities :: Set.Set (Priority Sort)
--- cfPriorities = Set.fromList $ [(Set.singleton $ ProdRef (SortLit "Exp") "Min") `TransPriority`
---                                ((Set.singleton $ ProdRef (SortLit "Exp") "App") `TransPriority`
---                                ((Set.fromList  $ [ProdRef (SortLit "Exp") "Add",
---                                                  ProdRef (SortLit "Exp") "Sub"]) `TransPriorityEl`
---                                (Set.singleton $ ProdRef (SortLit "Exp") "Eq")))
---                               ]
+cfPriorities :: Set.Set (Priority Sort)
+cfPriorities = Set.fromList $ [TransP $ ProdRef (SortLit "Exp") "Min" `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "App" `ElementTP`
+                                         ProdRef (SortLit "Exp") "Add"),
+                                
+                               TransP $ ProdRef (SortLit "Exp") "Min" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Sub",
+                                
+                               TransP $ ProdRef (SortLit "Exp") "App" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Sub",
+                                
+                               TransP $  ProdRef (SortLit "Exp") "Sub"   `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "Eq"    `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "IfE"   `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "IfT"   `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "Match" `ContinueTP`
+                                        (ProdRef (SortLit "Exp") "Fun"   `ElementTP`
+                                         ProdRef (SortLit "Exp") "Let"))))),
+
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Eq",
+                                
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "IfE",
+
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "IfT",
+
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Match",
+
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Fun",
+
+                               TransP $ ProdRef (SortLit "Exp") "Add" `ElementTP`
+                                        ProdRef (SortLit "Exp") "Let",
+
+                               IndexedTransP $ ElementITP (ProdRef (SortLit "Exp") "App") 1
+                                                          (ProdRef (SortLit "Exp") "Min")
+                               ]                                      
+
+templateOptions :: Set.Set (TemplateOption Sort)
+templateOptions = Set.fromList $ [RejectSym (SortSym . SortLit $ "ID") Reject,
+                                  Keyword . Set.singleton $ cc_azAZ09]
