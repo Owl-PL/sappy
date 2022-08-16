@@ -51,7 +51,7 @@ data Section
   | LexRestriction  (Set.Set (Restriction Sort))     -- ^ Lexical restrictions;
                                                      --   used for disambiguation.
   | CFRestriction   (Set.Set (Restriction Sort))     -- ^ Context-free restrictions;
-                                                     --   used for disambiguation.    
+  deriving (Ord,Eq)                                  --   used for disambiguation.    
 
 -- | Productions make up the lexical and context-free syntax sections,
 --   and consist of:

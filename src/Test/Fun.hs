@@ -5,6 +5,16 @@ import SDF3.Spec
 import qualified Data.Set as Set
 
 -- Module: lex
+
+module_lex :: Spec
+module_lex = Spec "lex" Set.empty $ Set.fromList
+  [
+    LexSorts lexsorts,
+    LexSyntax lexsyn,
+    LexRestriction lexRestrictions,
+    CFRestriction lexCFRestrictions
+  ]
+  
 lexsorts :: Set.Set Sort
 lexsorts = Set.fromList [SortLit "ID",
                          SortLit "INT",
@@ -55,6 +65,17 @@ lexCFRestrictions = Set.fromList [Restrict (CCSym . Class $ "-") (Set.singleton 
                                   Restrict (OptionalSym (SortSym Layout)) (Set.singleton $ (Concat (Class $ "/") (Class $ "*")))]
 
 -- Module: fun
+
+module_fun :: Spec
+module_fun = Spec "fun" (Set.singleton module_lex) $ Set.fromList
+  [
+    CFSorts cfsorts,
+    CFStartSymbols cfStartSymbols,
+    CFSyntax cfSyntax,
+    CFPriorities cfPriorities,
+    TemplateOptions templateOptions
+  ]
+
 cfsorts :: Set.Set Sort
 cfsorts = Set.fromList [SortLit "Exp",
                          SortLit "Case",
