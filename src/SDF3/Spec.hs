@@ -87,21 +87,27 @@ data TemplateOption sort
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
 data Priority sort
-  = TransPriorityEl         (Set.Set (ProductionRef sort)) (Set.Set (ProductionRef sort)) -- ^ The transitive ordering on elements.
-  
-  | TransPriority           (Set.Set (ProductionRef sort)) (Priority sort)                -- ^ The transitive ordering.
-  
-  | NontransPriorityEl      (Set.Set (ProductionRef sort)) (Set.Set (ProductionRef sort)) -- ^ The non-transitive ordering on elements.
+  = TransP (TransPriority sort)
+  | IndexedTransP (IndexedTransPriority sort)
+  | NonTransP (NonTransPriority sort)
+  deriving (Eq,Ord)
 
-  | NontransPriority        (Set.Set (ProductionRef sort)) (Priority sort)                -- ^ The non-transitive ordering.
+data TransPriority sort
+  = ElementTP  (ProductionRef sort) (ProductionRef sort)  -- ^ The transitive ordering on elements.
   
-  | IndexTransPriorityEl    (ProductionRef sort) Int (ProductionRef sort)                     -- ^ The transitive ordering with an index on elements.
+  | ContinueTP (ProductionRef sort) (TransPriority sort)  -- ^ The transitive ordering.    
+  deriving (Eq,Ord)
 
-  | IndexTransPriority      (ProductionRef sort) Int (Priority sort)                          -- ^ The transitive ordering with an index.
+data IndexedTransPriority sort
+  = ElementITP (ProductionRef sort) Int (ProductionRef sort)         -- ^ The transitive ordering with an index on elements.
+
+  | ContinueITP (ProductionRef sort) Int (IndexedTransPriority sort) -- ^ The transitive ordering with an index.  
+  deriving (Eq,Ord)
+
+data NonTransPriority sort
+  = ElementNTP  (ProductionRef sort) (ProductionRef sort)     -- ^ The non-transitive ordering on elements.
   
-  | IndexNontransPriorityEl (ProductionRef sort) Int (ProductionRef sort)                   -- ^ The non-transitive ordering with an index on elements.
-
-  | IndexNontransPriority   (ProductionRef sort) Int (Priority sort)                        -- ^ The non-transitive ordering with an index.  
+  | ElementINTP (ProductionRef sort) Int (ProductionRef sort) -- ^ The non-transitive ordering with an index on elements.
   deriving (Eq,Ord)
 
 -- | Restrictions filter applications of productions for certain

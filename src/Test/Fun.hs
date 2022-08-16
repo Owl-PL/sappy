@@ -141,6 +141,8 @@ cfSyntax = Set.fromList [
 
 -- cfPriorities :: Set.Set (Priority Sort)
 -- cfPriorities = Set.fromList $ [(Set.singleton $ ProdRef (SortLit "Exp") "Min") `TransPriority`
---                                (Set.singleton $ ProdRef (SortLit "Exp") "App"),
---                                (Set.singleton $ ProdRef (SortLit "Exp") "App") `AttrTransPriority`
+--                                ((Set.singleton $ ProdRef (SortLit "Exp") "App") `TransPriority`
+--                                ((Set.fromList  $ [ProdRef (SortLit "Exp") "Add",
+--                                                  ProdRef (SortLit "Exp") "Sub"]) `TransPriorityEl`
+--                                (Set.singleton $ ProdRef (SortLit "Exp") "Eq")))
 --                               ]

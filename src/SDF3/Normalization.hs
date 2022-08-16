@@ -136,46 +136,21 @@ normalizeTemplateOption synb (AttrSym sort attr) = AttrSym nsort attr
     nsort = normalizeSort synb sort
 
 normalizePriority :: Priority Sort -> Priority KernelSort
+normalizePriority (TransP tp) = TransP $ normalizeTransPriority tp
+normalizePriority (IndexedTransP itp) = IndexedTransP $ normalizeIndexedTransPriority itp
+normalizePriority (NonTransP ntp) = NonTransP $ normalizeNonTransPriority ntp
 
-normalizePriority (TransPriorityEl pset1 pset2) = TransPriorityEl npset1 npset2
-  where
-    npset1 = Set.map (normalizeProductionRef CF) pset1
-    npset2 = Set.map (normalizeProductionRef CF) pset2
+normalizeTransPriority :: TransPriority Sort -> TransPriority KernelSort
+normalizeTransPriority (ElementTP p1 p2)   = ElementTP (normalizeProductionRef CF p1) (normalizeProductionRef CF p2)
+normalizeTransPriority (ContinueTP p next) = ContinueTP (normalizeProductionRef CF p) (normalizeTransPriority next)
 
-normalizePriority (TransPriority pset next) = TransPriority npset nnext
-  where
-    npset = Set.map (normalizeProductionRef CF) pset
-    nnext = normalizePriority next
-    
-normalizePriority (NontransPriorityEl pset1 pset2) = NontransPriorityEl npset1 npset2
-  where
-    npset1 = Set.map (normalizeProductionRef CF) pset1
-    npset2 = Set.map (normalizeProductionRef CF) pset2
+normalizeIndexedTransPriority :: IndexedTransPriority Sort -> IndexedTransPriority KernelSort
+normalizeIndexedTransPriority (ElementITP p1 i p2) = ElementITP (normalizeProductionRef CF p1) i (normalizeProductionRef CF p2)
+normalizeIndexedTransPriority (ContinueITP p i next) = ContinueITP (normalizeProductionRef CF p) i (normalizeIndexedTransPriority next)
 
-normalizePriority (NontransPriority pset next) = NontransPriority npset nnext
-  where
-    npset = Set.map (normalizeProductionRef CF) pset
-    nnext = normalizePriority next
-        
-normalizePriority (IndexTransPriorityEl p1 i p2) = IndexTransPriorityEl np1 i np2
-  where
-    np1 = normalizeProductionRef CF p1
-    np2 = normalizeProductionRef CF p2
-
-normalizePriority (IndexTransPriority p i next) = IndexTransPriority np i nnext
-  where
-    np = normalizeProductionRef CF p
-    nnext = normalizePriority next
-    
-normalizePriority (IndexNontransPriorityEl p1 i p2) = IndexNontransPriorityEl np1 i np2
-  where
-    np1 = normalizeProductionRef CF p1
-    np2 = normalizeProductionRef CF p2
-
-normalizePriority (IndexNontransPriority p i next) = IndexNontransPriority np i nnext
-  where
-    np = normalizeProductionRef CF p
-    nnext = normalizePriority next   
+normalizeNonTransPriority :: NonTransPriority Sort -> NonTransPriority KernelSort
+normalizeNonTransPriority (ElementNTP p1 p2)  = ElementNTP  (normalizeProductionRef CF p1) (normalizeProductionRef CF p2)
+normalizeNonTransPriority (ElementINTP p1 i p2) = ElementINTP (normalizeProductionRef CF p1) i (normalizeProductionRef CF p2)
 
 normalizeRestriction :: Syn -> Restriction Sort -> Restriction KernelSort
 normalizeRestriction synb (Restrict sym lh) = Restrict nsym lh
