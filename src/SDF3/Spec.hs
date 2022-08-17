@@ -84,6 +84,9 @@ data TemplateOption sort
   | RejectSym (Symbol sort) Attribute -- ^ Mainly used to setup reject rules for keywords.
   deriving (Eq,Ord)
 
+instance Show sort => Show (TemplateOption sort) where
+  show = undefined
+
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
 data Priority sort
@@ -92,11 +95,20 @@ data Priority sort
   | NonTransP (NonTransPriority sort)
   deriving (Eq,Ord)
 
+instance Show sort => Show (Priority sort) where
+  show (TransP tp) = show tp
+  show (IndexedTransP itp) = show itp
+  show (NonTransP ntp) = show ntp
+
 data TransPriority sort
   = ElementTP  (ProductionRef sort) (ProductionRef sort)  -- ^ The transitive ordering on elements.
   
   | ContinueTP (ProductionRef sort) (TransPriority sort)  -- ^ The transitive ordering.    
   deriving (Eq,Ord)
+
+instance Show sort => Show (TransPriority sort) where
+  show (ElementTP  p1 p2)  = (show p1) ++ " > " ++ (show p2)
+  show (ContinueTP p next) = (show p)  ++ " > " ++ (show next)
 
 data IndexedTransPriority sort
   = ElementITP (ProductionRef sort) Int (ProductionRef sort)         -- ^ The transitive ordering with an index on elements.
@@ -104,11 +116,19 @@ data IndexedTransPriority sort
   | ContinueITP (ProductionRef sort) Int (IndexedTransPriority sort) -- ^ The transitive ordering with an index.  
   deriving (Eq,Ord)
 
+instance Show sort => Show (IndexedTransPriority sort) where
+  show (ElementITP  p1 i p2)  = (show p1) ++ " " ++ (show i) ++ " .> " ++ (show p2)
+  show (ContinueITP p i next) = (show p)  ++ " " ++ (show i) ++ " .> " ++ (show next)
+
 data NonTransPriority sort
   = ElementNTP  (ProductionRef sort) (ProductionRef sort)     -- ^ The non-transitive ordering on elements.
   
   | ElementINTP (ProductionRef sort) Int (ProductionRef sort) -- ^ The non-transitive ordering with an index on elements.
   deriving (Eq,Ord)
+
+instance Show sort => Show (NonTransPriority sort) where
+  show (ElementNTP p1 p2) = (show p1) ++ " [>] " ++ (show p2)
+  show (ElementINTP p1 i p2) = (show p1) ++ " " ++ (show i) ++ " [.>] " ++ (show p2)
 
 -- | Restrictions filter applications of productions for certain
 --   non-terminals (@sort@) if the following character, the lookahead,
@@ -117,6 +137,9 @@ data Restriction sort
   = Restrict (Symbol sort)  -- ^ The symbol to restrict.
              Lookahead      -- ^ A character class
   deriving (Eq,Ord)
+
+instance Show sort => (Show (Restriction sort)) where
+  show (Restrict sym lh) = (show sym) ++ "-/-" ++ (show lh)
 
 -- | A production reference is of the form:
 --
@@ -128,6 +151,9 @@ data ProductionRef sort
             String    -- ^ Some constructor of @sym@.
   deriving (Eq,Ord)
 
+instance Show sort => Show (ProductionRef sort) where
+  show (ProdRef sort const) = (show sort) ++ "." ++ const
+
 -- | Symbols are the basic lexical structure of surface
 --   specifications.  They consist of:
 data Symbol sort
@@ -138,6 +164,15 @@ data Symbol sort
   | Sequence    (Symbol sort) (Symbol sort)  -- ^ Sequences of symbols (@sym sym@)
   | Alternative (Symbol sort) (Symbol sort)  -- ^ Alternative symbols (@sym | sym@)
   deriving (Eq,Ord)
+
+instance Show sort => Show (Symbol sort) where
+  show (CCSym cc)                 = show cc
+  show (SortSym sort)             = show sort
+  show (OptionalSym sym)          = (show sym)++"?"
+  show (ListSym sym ZeroManyList) = "(" ++ (show sym) ++ ")*"
+  show (ListSym sym OneManyList)  = "(" ++ (show sym) ++ ")+"
+  show (Sequence sym1 sym2)      = (show sym1) ++  " " ++ (show sym2)
+  show (Alternative sym1 sym2)      = (show sym1) ++  " | " ++ (show sym2)
 
 -- | Template symbols are the basic lexical structure of template
 --   productions in the surface specification.  They consist of:
@@ -154,13 +189,27 @@ data TemplateSymbol sort
   | TSequence (TemplateSymbol sort) (TemplateSymbol sort)  -- ^ Sequences of symbols (@sym sym@)
   deriving (Eq,Ord)
 
+instance Show sort => Show (TemplateSymbol sort) where
+  show (TLitSym  s)                    = s
+  show (TLitSort sort)                 = show sort
+  show (TOptSort sort)                 = (show sort) ++ "?"
+  show (TListSym sym ""  ZeroManyList) = "(" ++ (show sym) ++ ")*"
+  show (TListSym sym sep ZeroManyList) = "(" ++ (show sym) ++ " " ++ sep ++ ")*"
+  show (TListSym sym ""  OneManyList)  = "(" ++ (show sym) ++ ")+"
+  show (TListSym sym sep OneManyList)  = "(" ++ (show sym) ++ " " ++ sep ++ ")+"
+  show (TSequence sym1 sym2)           = (show sym1) ++ " " ++ (show sym2)
+
 -- | Sorts define the non-terminals of the specification.
 data Sort = SortLit String  -- ^ A sort defined by the user.
           | Layout          -- ^ A reserved sort name used to indicate the
                             --   whitespace that can appear between
                             --   context-free symbols.
   deriving (Eq,Ord)
-            
+
+instance (Show Sort) where
+  show (SortLit sort) = sort
+  show (Layout)       = "LAYOUT"
+
 -- | Character classes describe sets of lexical characters.  They consist of:
 data CharClass
   = Class        [Char]                -- ^ A character class; e.g, @[a-z]@, @[A-Z]@, etc.
@@ -170,6 +219,14 @@ data CharClass
   | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
   | Concat       CharClass CharClass   -- ^ Concatenation of character classes.
   deriving (Eq,Ord)
+
+instance (Show CharClass) where
+  show (Class cc)             = show cc
+  show (Complement cc)        = "~"++(show cc)
+  show (Difference cc1 cc2)   = (show cc1) ++ " - " ++ (show cc2)
+  show (Union cc1 cc2)        = (show cc1) ++ " \\/ " ++ (show cc2)
+  show (Intersection cc1 cc2) = (show cc1) ++ " /\\ " ++ (show cc2)
+  show (Concat cc1 cc2)       = (show cc1) ++ (show cc2)
 
 cc_az       = Class $ ['a'..'z']
 cc_AZ       = Class $ ['A'..'Z']
@@ -189,6 +246,15 @@ data Attribute
   | Reject          -- ^ Keyword reservation.
   | LongestMatch    -- ^ Longest Match.
   deriving (Eq,Ord)
+
+instance (Show Attribute) where
+  show SDF3.Spec.Left  = "left"
+  show SDF3.Spec.Right = "right"
+  show Nonassoc        = "non-associative"
+  show Assoc           = "associative"
+  show Bracket         = "bracket"
+  show Reject          = "reject"
+  show LongestMatch    = "longest-match"
 
 -- | A set of character classes that describe the lookahead symbol.
 type Lookahead = Set.Set CharClass

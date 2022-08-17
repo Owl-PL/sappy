@@ -9,10 +9,10 @@ import qualified Data.Set as Set
 module_lex :: Spec
 module_lex = Spec "lex" Set.empty $ Set.fromList
   [
-    LexSorts lexsorts,
-    LexSyntax lexsyn,
+    LexSorts       lexsorts,
+    LexSyntax      lexsyn,
     LexRestriction lexRestrictions,
-    CFRestriction lexCFRestrictions
+    CFRestriction  lexCFRestrictions
   ]
   
 lexsorts :: Set.Set Sort
@@ -69,10 +69,10 @@ lexCFRestrictions = Set.fromList [Restrict (CCSym . Class $ "-") (Set.singleton 
 module_fun :: Spec
 module_fun = Spec "fun" (Set.singleton module_lex) $ Set.fromList
   [
-    CFSorts cfsorts,
-    CFStartSymbols cfStartSymbols,
-    CFSyntax cfSyntax,
-    CFPriorities cfPriorities,
+    CFSorts         cfsorts,
+    CFStartSymbols  cfStartSymbols,
+    CFSyntax        cfSyntax,
+    CFPriorities    cfPriorities,
     TemplateOptions templateOptions
   ]
 
