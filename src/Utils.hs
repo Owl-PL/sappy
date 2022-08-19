@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 module Utils where
 
 import qualified Data.Set as Set
@@ -42,3 +43,7 @@ mapUnion :: Ord ks
          -> Set.Set ks
          -> Set.Set ks
 mapUnion mapSet mapOp set = (Set.map mapOp mapSet) `Set.union` set 
+
+showSet :: Show a => Set.Set a -> String
+showSet (toList -> [])     = "{}"
+showSet (toList -> (x:xs)) = "{"++(show x) ++ (foldr (\y r -> "," ++ (show y) ++ r) "" xs)++"}"

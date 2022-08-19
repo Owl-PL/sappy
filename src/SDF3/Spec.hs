@@ -8,6 +8,8 @@
 --   the normalized version of the surface specification.
 module SDF3.Spec where
 
+import Utils
+
 import qualified Data.Set as Set
 
 -- * Surface Specification
@@ -53,6 +55,9 @@ data Section
   | CFRestriction   (Set.Set (Restriction Sort))     -- ^ Context-free restrictions;
   deriving (Ord,Eq)                                  --   used for disambiguation.    
 
+instance (Show Section) where
+  show = undefined
+
 -- | Productions make up the lexical and context-free syntax sections,
 --   and consist of:
 data Production sort
@@ -66,26 +71,28 @@ data Production sort
     --      
     -- @sym.const = [w] {attributes}@
     --
-    -- or
-    --
-    -- @sym.const = \<w\> {attributes}@
-    -- 
     -- where @w@ is a word over 'SDF3.TemplateSymbol'.
   | TemplateProd sort String (TemplateSymbol sort) (Set.Set Attribute)
   deriving (Eq,Ord)
+
+instance Show sort => Show (Production sort) where
+  show (Prod sort const sym atts)          = (show sort)++"."++(show const)++" -> "++(show sym)++" "++(showSet atts)
+  show (TemplateProd sort const tsym atts) = (show sort)++"."++(show const)++" -> ["++(show tsym)++"] "++(showSet atts)
 
 lexProd :: sort -> (Symbol sort) -> Set.Set Attribute -> Production sort
 lexProd sort = Prod sort ""
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sort
-  = Keyword  (Set.Set CharClass)      -- ^ Used to setup follow restrictions on keywords.
-  | Tokenize [Char]                   -- ^ Specifies which characters have layout around them.
-  | RejectSym (Symbol sort) Attribute -- ^ Mainly used to setup reject rules for keywords.
+  = Keyword  (Set.Set CharClass)            -- ^ Used to setup follow restrictions on keywords.
+  | Tokenize [Char]                         -- ^ Specifies which characters have layout around them.
+  | KeywordReject (Symbol sort) Attribute   -- ^ Mainly used to setup reject rules for keywords.
   deriving (Eq,Ord)
 
 instance Show sort => Show (TemplateOption sort) where
-  show = undefined
+  show (Keyword ccs) = "keyword -/- "++(foldr (\cc r -> (show cc)++" "++r) "" ccs)
+  show (Tokenize cc) = "tokenize: "++(show cc)
+  show (KeywordReject sym att) = (show sym)++" = keyword {"++(show att)++"}"
 
 -- | Priorities are used to place weighted restrictions on productions
 --   to prevent ambiguties; e.g., precedence.
@@ -191,7 +198,7 @@ data TemplateSymbol sort
 
 instance Show sort => Show (TemplateSymbol sort) where
   show (TLitSym  s)                    = s
-  show (TLitSort sort)                 = show sort
+  show (TLitSort sort)                 = "<"++(show sort)++">"
   show (TOptSort sort)                 = (show sort) ++ "?"
   show (TListSym sym ""  ZeroManyList) = "(" ++ (show sym) ++ ")*"
   show (TListSym sym sep ZeroManyList) = "(" ++ (show sym) ++ " " ++ sep ++ ")*"

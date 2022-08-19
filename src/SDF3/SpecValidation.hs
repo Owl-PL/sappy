@@ -57,7 +57,7 @@ validProduction sorts (TemplateProd sort const tsym _)
    tsymSorts = sortsInTSym tsym
 
 validTemplateOption :: Set.Set Sort -> TemplateOption Sort -> Bool
-validTemplateOption sorts (RejectSym sym _) = (sortsInSym sym) `Set.isSubsetOf` sorts
+validTemplateOption sorts (KeywordReject sym _) = (sortsInSym sym) `Set.isSubsetOf` sorts
 validTemplateOption _ _ = True    
 
 validPriority :: Set.Set Sort -> Priority Sort -> Bool

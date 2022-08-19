@@ -202,5 +202,5 @@ cfPriorities = Set.fromList $ [TransP $ ProdRef (SortLit "Exp") "Min" `ContinueT
                                ]                                      
 
 templateOptions :: Set.Set (TemplateOption Sort)
-templateOptions = Set.fromList $ [RejectSym (SortSym . SortLit $ "ID") Reject,
+templateOptions = Set.fromList $ [KeywordReject (SortSym . SortLit $ "ID") Reject,
                                   Keyword . Set.singleton $ cc_azAZ09]

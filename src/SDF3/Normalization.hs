@@ -131,7 +131,7 @@ normalizeProduction synb (TemplateProd sort const tsym attrs) =
 normalizeTemplateOption :: Syn -> TemplateOption Sort -> TemplateOption KernelSort
 normalizeTemplateOption synb (Keyword s) = Keyword s
 normalizeTemplateOption synb (Tokenize cc) = Tokenize cc
-normalizeTemplateOption synb (RejectSym sym attr) = RejectSym nsym attr
+normalizeTemplateOption synb (KeywordReject sym attr) = KeywordReject nsym attr
   where
     nsym = normalizeSymbol synb sym
 
