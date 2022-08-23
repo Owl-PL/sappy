@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 -- | The SDF3 syntax is divided into two main parts:
 --
 --   1. The surface specification.
@@ -38,9 +39,9 @@ unionSpecSorts (SpecSorts c1 l1) (SpecSorts c2 l2) = SpecSorts (c1 `Set.union` c
 data Section
   = CFSorts         (Set.Set Sort)                   -- ^ Context-free sorts (non-terminals).
   | LexSorts        (Set.Set Sort)                   -- ^ Lexical syntax sorts (non-terminals).
-  | LexSyntax       (Set.Set (Production Sort))    -- ^ The lexical syntax.
+  | LexSyntax       (Set.Set (Production Sort))      -- ^ The lexical syntax.
   
-  | CFSyntax        (Set.Set (Production Sort))    -- ^ The context-free syntax.
+  | CFSyntax        (Set.Set (Production Sort))      -- ^ The context-free syntax.
   
   | LexStartSymbols (Set.Set Sort)                   -- ^ The lexical start symbols
                                                      --   (non-terminals).
@@ -53,10 +54,14 @@ data Section
   | LexRestriction  (Set.Set (Restriction Sort))     -- ^ Lexical restrictions;
                                                      --   used for disambiguation.
   | CFRestriction   (Set.Set (Restriction Sort))     -- ^ Context-free restrictions;
-  deriving (Ord,Eq)                                  --   used for disambiguation.    
+                                                     --   used for disambiguation.    
+  deriving (Ord,Eq)                                  
 
 instance (Show Section) where
-  show = undefined
+  show (CFSorts   sorts) = "context-free sorts: "      ++ (setToCommaSepString sorts)
+  show (LexSorts  sorts) = "lexical sorts: "           ++ (setToCommaSepString sorts)
+  show (LexSyntax syn)   = "lexical syntax:\n  "       ++ (setToSepString "\n  " syn)
+  show (CFSyntax  syn)   = "context-free syntax:\n  "  ++ (setToSepString "\n  " syn)
 
 -- | Productions make up the lexical and context-free syntax sections,
 --   and consist of:
