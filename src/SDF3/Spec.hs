@@ -1,4 +1,6 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
 -- | The SDF3 syntax is divided into two main parts:
 --
 --   1. The surface specification.
@@ -20,8 +22,19 @@ import qualified Data.Set as Set
 data Spec
   = Spec { moduleName :: String,         -- ^ The module name.
            imports    :: Set.Set Spec,   -- ^ All imported specifications.
-           sections   :: Set.Set Section -- ^ The set of sections making up the specificaiton.
+           sections   :: Set.Set Section -- ^ The set of sections making up the specification.
          }
+  deriving (Ord,Eq)
+
+instance (Show Spec) where
+  show (Spec modName imps secs) | null imps =
+       "module "++modName++" where\n"
+    ++ (setToSepString "\n\n" secs)++"\n"
+  show (Spec modName imps secs) | otherwise =
+       (setToSepString "\n" imps)
+    ++ "\nmodule "++modName++" where\n"
+    ++ (indexedOp (\x y -> "import "++x++"\n"++y) "" moduleName imps)
+    ++ (setToSepString "\n\n" secs)++"\n"
 
 data SpecSorts
   = SpecSorts { cfSorts  :: Set.Set Sort,
@@ -58,11 +71,16 @@ data Section
   deriving (Ord,Eq)                                  
 
 instance (Show Section) where
-  show (CFSorts   sorts) = "context-free sorts: "      ++ (setToCommaSepString sorts)
-  show (LexSorts  sorts) = "lexical sorts: "           ++ (setToCommaSepString sorts)
-  show (LexSyntax syn)   = "lexical syntax:\n  "       ++ (setToSepString "\n  " syn)
-  show (CFSyntax  syn)   = "context-free syntax:\n  "  ++ (setToSepString "\n  " syn)
-
+  show (CFSorts         sorts) = "context-free sorts: "           ++ (setToCommaSepString sorts)
+  show (LexSorts        sorts) = "lexical sorts: "                ++ (setToCommaSepString sorts)
+  show (LexSyntax       syn)   = "lexical syntax:\n  "            ++ (setToSepString "\n  " syn)
+  show (CFSyntax        syn)   = "context-free syntax:\n  "       ++ (setToSepString "\n  " syn)
+  show (LexStartSymbols sorts) = "lexical start-symbols: "        ++ (setToCommaSepString sorts)
+  show (CFStartSymbols  sorts) = "context-free start-symbols: "   ++ (setToCommaSepString sorts)
+  show (TemplateOptions opts)  = "template options:\n  "          ++ (setToSepString "\n  " opts)
+  show (CFPriorities    pris)  = "context-free priorities:\n  "   ++ (setToSepString "\n  " pris)
+  show (LexRestriction  rest)  = "lexical restrictions:\n  "      ++ (setToSepString "\n  " rest)
+  show (CFRestriction   rest)  = "context-free restrictions:\n  " ++ (setToSepString "\n  " rest)  
 -- | Productions make up the lexical and context-free syntax sections,
 --   and consist of:
 data Production sort
@@ -81,15 +99,19 @@ data Production sort
   deriving (Eq,Ord)
 
 instance Show sort => Show (Production sort) where
-  show (Prod sort const sym atts)          = (show sort)++"."++(show const)++" -> "++(show sym)++" "++(showSet atts)
-  show (TemplateProd sort const tsym atts) = (show sort)++"."++(show const)++" -> ["++(show tsym)++"] "++(showSet atts)
+  show (Prod sort const sym atts)          = (show sort)++(showConst const)++" -> "++(show sym)++" "++(showSetNoEmpty atts)
+  show (TemplateProd sort const tsym atts) = (show sort)++(showConst const)++" -> ["++(show tsym)++"] "++(showSetNoEmpty atts)
+
+showConst :: String -> String
+showConst "" = ""
+showConst const = "."++const
 
 lexProd :: sort -> (Symbol sort) -> Set.Set Attribute -> Production sort
 lexProd sort = Prod sort ""
 
 -- | Template options place restrictions on the lexical syntax.  They consist of:
 data TemplateOption sort
-  = Keyword  (Set.Set CharClass)            -- ^ Used to setup follow restrictions on keywords.
+  = Keyword  (Set.Set (CharClass Char))     -- ^ Used to setup follow restrictions on keywords.
   | Tokenize [Char]                         -- ^ Specifies which characters have layout around them.
   | KeywordReject (Symbol sort) Attribute   -- ^ Mainly used to setup reject rules for keywords.
   deriving (Eq,Ord)
@@ -151,7 +173,8 @@ data Restriction sort
   deriving (Eq,Ord)
 
 instance Show sort => (Show (Restriction sort)) where
-  show (Restrict sym lh) = (show sym) ++ "-/-" ++ (show lh)
+  show (Restrict sym lh) | Set.size lh == 1 = (show sym) ++ " -/- " ++ (show . head . Set.toList $ lh)
+  show (Restrict sym lh) | otherwise        = (show sym) ++ " -/- " ++ (showSet lh)
 
 -- | A production reference is of the form:
 --
@@ -169,7 +192,7 @@ instance Show sort => Show (ProductionRef sort) where
 -- | Symbols are the basic lexical structure of surface
 --   specifications.  They consist of:
 data Symbol sort
-  = CCSym       CharClass                    -- ^ Character classes
+  = CCSym       (CharClass Char)             -- ^ Character classes
   | SortSym     sort                         -- ^ Sorts (non-terminals)
   | OptionalSym (Symbol sort)                -- ^ Optional symbols (@sym?@)
   | ListSym     (Symbol sort) LMode          -- ^ Lists of symbols (@sym*@ or @sym+@)
@@ -181,7 +204,9 @@ instance Show sort => Show (Symbol sort) where
   show (CCSym cc)                 = show cc
   show (SortSym sort)             = show sort
   show (OptionalSym sym)          = (show sym)++"?"
+  show (ListSym (sym@(CCSym (CharClass _))) ZeroManyList) = (show sym) ++ "*"
   show (ListSym sym ZeroManyList) = "(" ++ (show sym) ++ ")*"
+  show (ListSym (sym@(CCSym (CharClass _))) OneManyList) = (show sym) ++ "+"
   show (ListSym sym OneManyList)  = "(" ++ (show sym) ++ ")+"
   show (Sequence sym1 sym2)      = (show sym1) ++  " " ++ (show sym2)
   show (Alternative sym1 sym2)      = (show sym1) ++  " | " ++ (show sym2)
@@ -222,31 +247,67 @@ instance (Show Sort) where
   show (SortLit sort) = sort
   show (Layout)       = "LAYOUT"
 
--- | Character classes describe sets of lexical characters.  They consist of:
-data CharClass
-  = Class        [Char]                -- ^ A character class; e.g, @[a-z]@, @[A-Z]@, etc.
-  | Complement   CharClass             -- ^ The complement of a character class.
-  | Difference   CharClass CharClass   -- ^ The difference of two character classes.
-  | Union        CharClass CharClass   -- ^ The union of two character classes.
-  | Intersection CharClass CharClass   -- ^ The intersection of two character classes.
-  | Concat       CharClass CharClass   -- ^ Concatenation of character classes.
+-- * Character Classes.
+
+-- | Character classes describe sets of lexical characters.  The
+--   first, `CharClassRep` is essentially the alphabet of the
+--   character class including character ranges.  
+data CharClassRep rep
+  = AlphaChar rep                                    -- ^ A character; e.g., @a@, @b@, etc.
+  | RangeChar rep rep                                -- ^ A character range; e.g, @a-z@, @A-Z@, etc.  
   deriving (Eq,Ord)
 
-instance (Show CharClass) where
-  show (Class cc)             = show cc
+instance (Show (CharClassRep Char)) where
+  show (AlphaChar c)         = tail . init . show $ c
+  show (RangeChar start end) = [start]++"-"++[end]
+
+-- | `CharClass` is the second component of character classes which
+-- consists of the actual character classs, and operations on
+-- character classes.
+data CharClass rep
+  = EmptyClass                                        -- ^ The empty character class.
+  | CharClass    [CharClassRep rep]                   -- ^ A character class.
+  | Complement   (CharClass rep)                      -- ^ The complement of a character class.
+  | Difference   (CharClass rep) (CharClass rep)      -- ^ The difference of two character classes.
+  | Intersection (CharClass rep) (CharClass rep)      -- ^ The intersection of two character classes.
+  | Concat       (CharClass rep) (CharClass rep)      -- ^ Concatenation of character classes.
+  deriving (Eq,Ord)
+
+instance (Show (CharClass Char)) where
+  show EmptyClass             = "[]"
+  show (CharClass cc)         = "["++(listToSepString "" cc)++"]"
   show (Complement cc)        = "~"++(show cc)
   show (Difference cc1 cc2)   = (show cc1) ++ " - " ++ (show cc2)
-  show (Union cc1 cc2)        = (show cc1) ++ " \\/ " ++ (show cc2)
   show (Intersection cc1 cc2) = (show cc1) ++ " /\\ " ++ (show cc2)
+  show (Concat (CharClass [AlphaChar c1]) (CharClass [AlphaChar c2])) = show [c1,c2]
   show (Concat cc1 cc2)       = (show cc1) ++ (show cc2)
 
-cc_az       = Class $ ['a'..'z']
-cc_AZ       = Class $ ['A'..'Z']
-cc_09       = Class $ ['0'..'9']
-cc_azAZ     = Union cc_az cc_AZ
-cc_azAZ09   = Union cc_azAZ cc_09
-cc_newlines = Class $ "\n\r"
-cc_ws       = Union (Class " \t") cc_newlines
+rangeClass :: rep -> rep -> CharClass rep
+rangeClass start end = CharClass [RangeChar start end]
+
+charCC :: [Char] -> CharClass Char
+charCC l = CharClass $ map AlphaChar l
+
+cc_az :: CharClass Char
+cc_az = rangeClass 'a' 'z'
+
+cc_AZ :: CharClass Char
+cc_AZ = rangeClass 'A' 'Z'
+
+cc_09 :: CharClass Char
+cc_09 = rangeClass '0' '9'
+
+cc_azAZ :: CharClass Char
+cc_azAZ = CharClass [RangeChar 'a' 'z', RangeChar 'A' 'Z']
+
+cc_azAZ09 :: CharClass Char
+cc_azAZ09 = CharClass [RangeChar 'a' 'z', RangeChar 'A' 'Z', RangeChar '0' '9']
+
+cc_newlines :: CharClass Char
+cc_newlines = CharClass [AlphaChar '\n', AlphaChar '\r']
+
+cc_ws :: CharClass Char
+cc_ws = CharClass [AlphaChar ' ', AlphaChar '\t', AlphaChar '\n', AlphaChar '\r']
 
 -- | Attributes describe restrictions on productinos. They consist of:
 data Attribute
@@ -269,7 +330,7 @@ instance (Show Attribute) where
   show LongestMatch    = "longest-match"
 
 -- | A set of character classes that describe the lookahead symbol.
-type Lookahead = Set.Set CharClass
+type Lookahead = Set.Set (CharClass Char)
 
 -- | Describe whether a symbol list can be empty or non-empty.
 data LMode = ZeroManyList  -- ^ List contains zero or more elements; e.g., can be empty.

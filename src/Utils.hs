@@ -44,9 +44,12 @@ mapUnion :: Ord ks
          -> Set.Set ks
 mapUnion mapSet mapOp set = (Set.map mapOp mapSet) `Set.union` set 
 
+listToSepString :: Show a => String -> [a] -> String
+listToSepString sep (toList -> []) = ""
+listToSepString sep (toList -> (x:xs)) = (show x)++(indexedOp' (++) "" (\y -> sep++(show y)) xs)
+
 setToSepString :: Show a => String -> Set.Set a -> String
-setToSepString sep (toList -> []) = ""
-setToSepString sep (toList -> (x:xs)) = (show x)++(indexedOp' (++) "" (\y -> sep++(show y)) xs)
+setToSepString sep (toList -> l) = listToSepString sep l
 
 setToCommaSepString :: Show a => Set.Set a -> String
 setToCommaSepString = setToSepString ","
@@ -55,4 +58,8 @@ setToNewlineSepString :: Show a => Set.Set a -> String
 setToNewlineSepString = setToSepString "\n"
 
 showSet :: Show a => Set.Set a -> String
-showSet s = "{"++(setToCommaList s)++"}"
+showSet s = "{"++(setToCommaSepString s)++"}"
+
+showSetNoEmpty :: Show a => Set.Set a -> String
+showSetNoEmpty s | null s = ""
+showSetNoEmpty s = showSet s
